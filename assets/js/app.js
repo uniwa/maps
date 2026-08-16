@@ -2,81 +2,114 @@ showSpinner();
 var map;
 var urlParams = getUrlParams();
 
-$(document).ready(function() {
-    $('#edu_admin').select2({
-        placeholder: '',
-        sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-        )
-    });
-    $('#region_edu_admin').select2({
-        placeholder: '',
-        sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-        )
-    });
-    $('#municipality').select2({
-        placeholder: '',
-        sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-        )
-    });
-    $('#unit_type').select2({
-        placeholder: '',
-        sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-        )
-    });
-    $('#orientation_type').select2({
-            placeholder: '',
-            sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-    )
-    });
-    $('#operation_shift').select2({
-            placeholder: '',
-            sorter: data => data.sort(
-            (a, b) => a.text.localeCompare(b.text)
-    )
-    });
+/**
+ * The sidebar filter controls.
+ *
+ * `param`  - the query parameter the registry expects
+ * `urlKey` - the corresponding key in urlParams.searchValues
+ * `text`   - free-text input rather than a select2 dropdown
+ */
+var FILTERS = [
+    { param: 'name',             urlKey: 'name',             selector: '.form-control.search_name',        text: true },
+    { param: 'mm_id',            urlKey: 'mmID',             selector: '.form-control.search_mm_id',       text: true },
+    { param: 'registry_no',      urlKey: 'registryNo',       selector: '.form-control.search_registry_no', text: true },
+    { param: 'edu_admin',        urlKey: 'eduAdmins',        selector: '#edu_admin' },
+    { param: 'region_edu_admin', urlKey: 'regionEduAdmins',  selector: '#region_edu_admin' },
+    { param: 'municipality',     urlKey: 'municipalities',   selector: '#municipality' },
+    { param: 'unit_type',        urlKey: 'unitTypes',        selector: '#unit_type' },
+    { param: 'orientation_type', urlKey: 'orientationTypes', selector: '#orientation_type' },
+    { param: 'operation_shift',  urlKey: 'operationShifts',  selector: '#operation_shift' }
+];
 
-    if (!_.isEmpty(urlParams.searchValues.name))
-    {
-        $('.form-control.search_name').val(urlParams.searchValues.name).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.mmID))
-    {
-        $('.form-control.search_mm_id').val(urlParams.searchValues.mmID).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.registryNo))
-    {
-        $('.form-control.search_registry_no').val(urlParams.searchValues.registryNo).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.eduAdmins))
-    {
-        $('#edu_admin').val(urlParams.searchValues.eduAdmins).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.regionEduAdmins))
-    {
-        $('#region_edu_admin').val(urlParams.searchValues.regionEduAdmins).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.municipalities))
-    {
-        $('#municipality').val(urlParams.searchValues.municipalities).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.unitTypes))
-    {
-        $('#unit_type').val(urlParams.searchValues.unitTypes).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.orientationTypes))
-    {
-        $('#orientation_type').val(urlParams.searchValues.orientationTypes).trigger('change');
-    }
-    if (!_.isEmpty(urlParams.searchValues.operationShifts))
-    {
-        $('#operation_shift').val(urlParams.searchValues.operationShifts).trigger('change');
-    }
+$(document).ready(function() {
+    FILTERS.forEach(function (filter) {
+        if (!filter.text) {
+            $(filter.selector).select2({
+                placeholder: '',
+                sorter: function (data) {
+                    return data.sort(function (a, b) {
+                        return a.text.localeCompare(b.text);
+                    });
+                }
+            });
+        }
+        var value = urlParams.searchValues[filter.urlKey];
+        if (!_.isEmpty(value)) {
+            $(filter.selector).val(value).trigger('change');
+        }
+    });
 });
+
+/**
+ * Reads the sidebar controls and returns the active filters as a query string.
+ * `encodeText` URL-encodes the free-text fields, which is what the shareable
+ * link needs.
+ */
+function collectFilters(encodeText) {
+    var params = [];
+    FILTERS.forEach(function (filter) {
+        var value = $(filter.selector).val();
+        if (!value || value.length === 0) {
+            return;
+        }
+        params.push(filter.param + '=' + (encodeText && filter.text ? encodeURI(value) : value));
+    });
+    return params.join('&');
+}
+
+/* Drop the current points and start a fresh layer */
+function resetUnitsLayer() {
+    markerClusters.removeLayer(units);
+    units = L.geoJson(null, {
+        pointToLayer: pointToLayer,
+        onEachFeature: onEachFeature
+    });
+}
+
+function featureRow(feature) {
+    return '<tr class="feature-row" ' +
+        ' mm_id="' + feature.properties.mmId + '"' +
+        ' name_sch="' + sanitization(feature.properties.name) + '"' +
+        ' lat="' + feature.geometry.coordinates[1] + '"' +
+        ' lng="' + feature.geometry.coordinates[0] + '">' +
+        '<td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/unit.png"></td>' +
+        '<td class="feature-name">' + feature.properties.name + '</td>' +
+        '<td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td>' +
+        '</tr>';
+}
+
+/**
+ * Fetches units from the registry and puts them on the map.
+ *
+ * `query`      - extra query string, without the leading '&'
+ * `renderList` - also draw the sidebar result list
+ */
+function loadUnits(query, renderList) {
+    var url = MapsConfig.baseMMUrl + 'units.geojson?state=1' + (query ? '&' + query : '');
+
+    $.getJSON(url, function (results) {
+        if (_.isNil(results.data)) {
+            console.log('MM api connection error - ' + url);
+            hideSpinner();
+            return;
+        }
+        if (renderList) {
+            var res = $('#feature-list tbody');
+            if (results.count === 0) {
+                res.append('<h4 class="rip">Κανένα Αποτέλεσμα</h4>');
+            } else {
+                res.append(results.data.features.map(featureRow).join(''));
+            }
+            // Adjust sidebar height to extend to the bottom
+            $('.sidebar-table').height(function(index, height) {
+                return window.innerHeight - $(this).offset().top;
+            });
+        }
+        units.addData(results.data);
+        markerClusters.addLayer(units);
+        hideSpinner();
+    });
+}
 
 //Run when user click on unit name at left row
 $(document).on("click", ".feature-row", function () {
@@ -104,12 +137,11 @@ $(document).on("mouseout", ".feature-row", clearHighlight);
 //left column-----------------------------------------------------
 //reset button
 $("#reset").click(function() {
-    $('#edu_admin').val('').trigger('change');
-    $('#region_edu_admin').val('').trigger('change');
-    $('#municipality').val('').trigger('change');
-    $('#unit_type').val('').trigger('change');
-    $('#orientation_type').val('').trigger('change');
-    $('#operation_shift').val('').trigger('change');
+    FILTERS.forEach(function (filter) {
+        if (!filter.text) {
+            $(filter.selector).val('').trigger('change');
+        }
+    });
     $(':input').val('');
 });
 
@@ -197,71 +229,20 @@ var zoomControl = L.control.zoom({
 }).addTo(map);
 
 //-----------------------------Show markers to map-------------------------------------------------
-var unit_info = $('#units_info');
-unit_info.empty();
+$('#units_info').empty();
 if (Array.isArray(urlParams.urlValues) && urlParams.urlValues.length === 0) {
-    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1';
-    $.getJSON(urlCustom, function (results) {
-        if (!_.isNil(results.data)) {
-            //unit_info.append('Βρέθηκαν '+ results.count +' Μονάδες');
-            units.addData(results.data);
-            markerClusters.addLayer(units);
-        } else {
-            console.log('MM api connection error - Init all');
-        }
-        hideSpinner();
-    });
+    loadUnits('', false);
 }
 else
 {
     document.getElementById("sidebar-news").style.display = "none";
-    var res = $('#feature-list tbody');
-    res.empty();
-    markerClusters.removeLayer(units);
+    $('#feature-list tbody').empty();
+    resetUnitsLayer();
     map.setView(
         [urlParams.lat, urlParams.lng],
         urlParams.zoom
     );
-    //empty points from map
-    units = L.geoJson(null, {
-        pointToLayer: pointToLayer,
-        onEachFeature: onEachFeature
-    });
-
-    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1&'+ urlParams.urlValues.join('&');
-    $.getJSON(urlCustom, function (results) {
-        if (!_.isNil(results.data)) {
-            var filteredData = results.data;
-            var searchResult = filteredData.features;
-            if (results.count === 0) {
-                res.append('<h4 class="rip">Κανένα Αποτέλεσμα</h4>');
-            } else {
-                //unit_info.append('Βρέθηκαν '+ results.count +' Ενεργές Μονάδες');
-                for (var key in searchResult) {
-                    res.append(
-                        '<tr class="feature-row" ' +
-                        ' mm_id="' + searchResult[key].properties.mmId  + '"' +
-                        ' name_sch="' + sanitization(searchResult[key].properties.name) + '"' +
-                        ' lat="' + searchResult[key].geometry.coordinates[1] + '"' +
-                        ' lng="' + searchResult[key].geometry.coordinates[0] + '">' +
-                        '<td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/unit.png"></td>' +
-                        '<td class="feature-name">' + searchResult[key].properties.name + '</td>' +
-                        '<td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td>' +
-                        '</tr>'
-                    );
-                }
-            }
-            // Adjust sidebar height to extend to the bottom
-            $('.sidebar-table').height(function(index, height) {
-                return window.innerHeight - $(this).offset().top;
-            });
-            units.addData(filteredData);
-            markerClusters.addLayer(units);
-        } else {
-            console.log('MM api connection error - Custom url');
-        }
-        hideSpinner();
-    });
+    loadUnits(urlParams.urlValues.join('&'), true);
 }
 
 
@@ -271,47 +252,8 @@ map.on("click", function() {
 });
 //create href with right click
 map.on('contextmenu', function (e) {
-    var searchParams = [];
-    var name = $('.form-control.search_name').val();
-    var mmId = $('.form-control.search_mm_id').val();
-    var registryNo = $('.form-control.search_registry_no').val();
-    var eduAdmins = $('#edu_admin').val();
-    var regionEduAdmins = $('#region_edu_admin').val();
-    var municipalities = $('#municipality').val();
-    var unitTypes = $('#unit_type').val();
-    var orientationTypes = $('#orientation_type').val();
-    var operationShifts = $('#operation_shift').val();
-    var searchParamsFormat = '';
-    if (name) {
-        searchParams.push('name=' + encodeURI(name));
-    }
-    if (mmId) {
-        searchParams.push('mm_id=' + encodeURI(mmId));
-    }
-    if (registryNo) {
-        searchParams.push('registry_no=' + encodeURI(registryNo));
-    }
-    if (eduAdmins) {
-        searchParams.push('edu_admin=' + eduAdmins);
-    }
-    if (regionEduAdmins) {
-        searchParams.push('region_edu_admin=' + regionEduAdmins);
-    }
-    if (municipalities) {
-        searchParams.push('municipality=' + municipalities);
-    }
-    if (unitTypes) {
-        searchParams.push('unit_type=' + unitTypes);
-    }
-    if (orientationTypes) {
-        searchParams.push('orientation_type=' + orientationTypes);
-    }
-    if (operationShifts) {
-        searchParams.push('operation_shift=' + operationShifts);
-    }
-    if (Array.isArray(searchParams) && searchParams.length > 0) {
-        searchParamsFormat = '&'.concat(searchParams.join('&'));
-    }
+    var filters = collectFilters(true);
+    var searchParamsFormat = filters ? '&' + filters : '';
 
     var urlCustom = MapsConfig.baseHrefUrl +
         '?zoom=' + e.target.getZoom() +
@@ -365,97 +307,13 @@ $('#apply-filters').click(function() {
     document.getElementById("sidebar-news").style.display = "none";
     clearHighlight();
     window.history.pushState({}, document.title, "/" + MapsConfig.baseNewUrl );
-	showSpinner();
-    var res = $('#feature-list tbody');
-    res.empty();
-    var unit_info = $('#units_info');
-    unit_info.empty();
-    markerClusters.removeLayer(units);
+    showSpinner();
+    $('#feature-list tbody').empty();
+    $('#units_info').empty();
+    resetUnitsLayer();
     map.setView(
         [MapsConfig.latGR, MapsConfig.lngGR],
         MapsConfig.zoomGR
     );
-    //empty points from map
-    units = L.geoJson(null, {
-        pointToLayer: pointToLayer,
-        onEachFeature: onEachFeature
-    });
-
-    var searchParams = [];
-    var searchParamsFormat = '';
-    var name =  $('.form-control.search_name').val();
-    var mmId =  $('.form-control.search_mm_id').val();
-    var registryNo =  $('.form-control.search_registry_no').val();
-    var eduAdmins = $('#edu_admin').val();
-    var regionEduAdmins = $('#region_edu_admin').val();
-    var municipalities = $('#municipality').val();
-    var unitTypes = $('#unit_type').val();
-    var orientationTypes = $('#orientation_type').val();
-    var operationShifts = $('#operation_shift').val();
-    if (name) {
-        searchParams.push('name='+name);
-    }
-    if (mmId) {
-        searchParams.push('mm_id='+mmId);
-    }
-    if (registryNo) {
-        searchParams.push('registry_no='+registryNo);
-    }
-    if (eduAdmins) {
-        searchParams.push('edu_admin='+eduAdmins);
-    }
-    if (regionEduAdmins) {
-        searchParams.push('region_edu_admin='+regionEduAdmins);
-    }
-    if (municipalities) {
-        searchParams.push('municipality='+municipalities);
-    }
-    if (unitTypes) {
-        searchParams.push('unit_type='+unitTypes);
-    }
-    if (orientationTypes) {
-        searchParams.push('orientation_type='+orientationTypes);
-    }
-    if (operationShifts) {
-        searchParams.push('operation_shift='+operationShifts);
-    }
-    if (Array.isArray(searchParams) && searchParams.length > 0) {
-        searchParamsFormat = '&'.concat(searchParams.join('&'));
-    }
-    //TODO combine with custom url and create function
-    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1'+ searchParamsFormat;
-    $.getJSON(urlCustom, function (results) {
-        if (!_.isNil(results.data)) {
-            var filteredData = results.data;
-            var searchResult = filteredData.features;
-            if (results.count === 0) {
-                res.append('<h4 class="rip">Κανένα Αποτέλεσμα</h4>');
-            } else {
-                //unit_info.append('Βρέθηκαν '+ results.count +' Μονάδες');
-                for (var key in searchResult) {
-                    res.append(
-                        '<tr class="feature-row" ' +
-                        ' mm_id="' + searchResult[key].properties.mmId  + '"' +
-                        ' name_sch="' + sanitization(searchResult[key].properties.name) + '"' +
-                        ' lat="' + searchResult[key].geometry.coordinates[1] + '"' +
-                        ' lng="' + searchResult[key].geometry.coordinates[0] + '">' +
-                        '<td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/unit.png"></td>' +
-                        '<td class="feature-name">' + searchResult[key].properties.name + '</td>' +
-                        '<td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td>' +
-                        '</tr>'
-                    );
-                }
-            }
-        // Adjust sidebar height to extend to the bottom
-        $('.sidebar-table').height(function(index, height) {
-            return window.innerHeight - $(this).offset().top;
-        });
-        units.addData(filteredData);
-        markerClusters.addLayer(units);
-
-        } else {
-            console.log('MM api connection error - Search Click');
-        }
-		hideSpinner();
-    });
+    loadUnits(collectFilters(false), true);
 });
