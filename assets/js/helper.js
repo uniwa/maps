@@ -270,7 +270,7 @@ function showUnitModal(unitData, sites) {
     }
 
     var content = "<table class='table table-striped table-bordered table-condensed'>" +
-      "<tr><th>Όνομα</th><td>" + unitData.name +
+      "<tr><th>Όνομα</th><td>" + sanitization(unitData.name) +
       "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=" + MapsConfig.mmSiteUrl + "main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
       "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
       "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
@@ -287,7 +287,7 @@ function showUnitModal(unitData, sites) {
       "<tr><th>Email</th><td>" + email + "</td></tr>" +
       "<table>";
 
-    $("#feature-title").html(unitData.name);
+    $("#feature-title").text(unitData.name);
     $("#feature-info").html(content);
     $("#featureModal").modal('show');
     map.setView([latitude, longitude], 18);

@@ -76,7 +76,7 @@ function featureRow(feature) {
         ' lat="' + feature.geometry.coordinates[1] + '"' +
         ' lng="' + feature.geometry.coordinates[0] + '">' +
         '<td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/unit.png"></td>' +
-        '<td class="feature-name">' + feature.properties.name + '</td>' +
+        '<td class="feature-name">' + sanitization(feature.properties.name) + '</td>' +
         '<td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td>' +
         '</tr>';
 }
