@@ -58,7 +58,7 @@
     </div>
 
     <div id="container">
-      <div id="sidebar">
+      <div id="sidebar" data-testid="sidebar">
         <div class="sidebar-wrapper">
           <div class="panel panel-default" id="features">
             <div class="panel-heading">
@@ -723,7 +723,7 @@
             </div>
             <div class="sidebar-table">
               <div id="units_info"></div>
-              <table class="table table-hover" id="feature-list">
+              <table class="table table-hover" id="feature-list" data-testid="feature-list">
                 <tbody class="list"></tbody>
               </table>
             </div>
@@ -731,7 +731,7 @@
           </div>
         </div>
       </div>
-      <div id="map"></div>
+      <div id="map" data-testid="map"></div>
     </div>
 
     <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
@@ -799,9 +799,9 @@
         <div class="modal-content">
           <div class="modal-header">
             <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title text-primary" id="feature-title"></h4>
+            <h4 class="modal-title text-primary" id="feature-title" data-testid="unit-title"></h4>
           </div>
-          <div class="modal-body" id="feature-info"></div>
+          <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>

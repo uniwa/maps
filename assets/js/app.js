@@ -70,7 +70,7 @@ function resetUnitsLayer() {
 }
 
 function featureRow(feature) {
-    return '<tr class="feature-row" ' +
+    return '<tr class="feature-row" data-testid="feature-row"' +
         ' mm_id="' + feature.properties.mmId + '"' +
         ' name_sch="' + sanitization(feature.properties.name) + '"' +
         ' lat="' + feature.geometry.coordinates[1] + '"' +
@@ -99,7 +99,7 @@ function loadUnits(query, renderList) {
         if (renderList) {
             var res = $('#feature-list tbody');
             if (results.count === 0) {
-                res.append('<h4 class="rip">Κανένα Αποτέλεσμα</h4>');
+                res.append('<tr><td colspan="3"><h4 class="rip" data-testid="no-results">Κανένα Αποτέλεσμα</h4></td></tr>');
             } else {
                 res.append(results.data.features.map(featureRow).join(''));
             }
