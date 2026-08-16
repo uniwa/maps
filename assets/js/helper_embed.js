@@ -83,9 +83,9 @@ function getUrlParams()
     var urlUnitType = getUrlParam('unit_type', '');
     var urlOrientationType = getUrlParam('orientation_type', '');
     var urlOperationShift = getUrlParam('operation_shift', '');
-    var zoom = getUrlParam('zoom', defaultValues.zoomGR);
-    var lat = getUrlParam('lat', defaultValues.latGR);
-    var lng = getUrlParam('lng', defaultValues.lngGR);
+    var zoom = getUrlParam('zoom', MapsConfig.zoomGR);
+    var lat = getUrlParam('lat', MapsConfig.latGR);
+    var lng = getUrlParam('lng', MapsConfig.lngGR);
 
     if (urlName != '' && urlName !== undefined)
     {
@@ -197,7 +197,7 @@ function onEachFeature(feature,layer) {
     if (feature.properties) {
         layer.on({
             click: function() {
-                var APIEndpoint = defaultValues.baseMMUrl + 'units?mm_id=' + feature.properties.mmId;
+                var APIEndpoint = MapsConfig.baseMMUrl + 'units?mm_id=' + feature.properties.mmId;
                 return onUnitClick(APIEndpoint);
             }
         });
@@ -224,7 +224,7 @@ function onUnitClick(APIEndpoint) {
             var longitude = !_.isNil(unitData.longitude) ? unitData.longitude : 0;
             var content = "<table class='table table-striped table-bordered table-condensed'>" +
                 "<tr><th>Όνομα</th><td>" + unitData.name +
-                "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=https://mm.sch.gr/main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
+                "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=" + MapsConfig.mmSiteUrl + "main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
                 "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
                 "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
                 "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +

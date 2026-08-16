@@ -1,21 +1,13 @@
 showSpinner();
-defaultValues = {
-    baseMMUrl : 'https://mm.sch.gr/api/',
-    baseHrefUrl : 'https://maps.sch.gr/main.html',
-    baseNewUrl : 'main.html',
-    latGR : '38.1',
-    lngGR : '24.2',
-    zoomGR : '7'
-};
 var map;
 var urlParams = getUrlParams();
 
 //----------------------Initial variables for map--------------------------------------------------------
 /* Basemap Layers */
-var baseMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=el", {
-    maxZoom: 19,
+var baseMap = L.tileLayer(MapsConfig.tileUrl, {
+    maxZoom: MapsConfig.tileMaxZoom,
     lang: 'el',
-    attribution: '<a href="https://maps.sch.gr" target="_blank">Χάρτης Μονάδων ΠΣΔ</a><br>&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+    attribution: MapsConfig.embedAttribution
 });
 /* Overlay Layers */
 var highlight = L.geoJson(null);
@@ -68,11 +60,11 @@ map.on("click", function() {
 //-----------------------------Show markers to map-------------------------------------------------
 if (Array.isArray(urlParams.urlValues) && urlParams.urlValues.length === 0)
 {
-    var urlCustom = defaultValues.baseMMUrl + 'units.geojson?state=1';
+    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1';
 }
 else
 {
-    var urlCustom = defaultValues.baseMMUrl + 'units.geojson?state=1&'+ urlParams.urlValues.join('&');
+    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1&'+ urlParams.urlValues.join('&');
 }
 
 $.getJSON(urlCustom, function (results) {

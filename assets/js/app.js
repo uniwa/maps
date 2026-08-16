@@ -1,13 +1,4 @@
 showSpinner();
-defaultValues = {
-    baseMMUrl : 'https://mm.sch.gr/api/',
-    baseHrefUrl : 'https://maps.sch.gr/main.html',
-    baseEmbedHrefUrl : 'https://maps.sch.gr/embed.html',
-    baseNewUrl : 'main.html',
-    latGR : '38.1',
-    lngGR : '24.2',
-    zoomGR : '7'
-};
 var map;
 var urlParams = getUrlParams();
 
@@ -89,7 +80,7 @@ $(document).ready(function() {
 
 //Run when user click on unit name at left row
 $(document).on("click", ".feature-row", function () {
-    var urlCustom = defaultValues.baseMMUrl + 'units?mm_id=' + $(this).attr("mm_id");
+    var urlCustom = MapsConfig.baseMMUrl + 'units?mm_id=' + $(this).attr("mm_id");
     $(document).off("mouseout", ".feature-row", clearHighlight);
     onUnitClick(urlCustom)
 });
@@ -158,10 +149,10 @@ $("#sidebar-hide-btn").click(function() {
 
 //----------------------Initial variables for map--------------------------------------------------------
 /* Basemap Layers */
-var baseMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=el", {
-    maxZoom: 19,
+var baseMap = L.tileLayer(MapsConfig.tileUrl, {
+    maxZoom: MapsConfig.tileMaxZoom,
     lang: 'el',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+    attribution: MapsConfig.tileAttribution
 });
 /* Overlay Layers */
 var highlight = L.geoJson(null);
@@ -209,7 +200,7 @@ var zoomControl = L.control.zoom({
 var unit_info = $('#units_info');
 unit_info.empty();
 if (Array.isArray(urlParams.urlValues) && urlParams.urlValues.length === 0) {
-    var urlCustom = defaultValues.baseMMUrl + 'units.geojson?state=1';
+    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1';
     $.getJSON(urlCustom, function (results) {
         if (!_.isNil(results.data)) {
             //unit_info.append('Βρέθηκαν '+ results.count +' Μονάδες');
@@ -237,7 +228,7 @@ else
         onEachFeature: onEachFeature
     });
 
-    var urlCustom = defaultValues.baseMMUrl + 'units.geojson?state=1&'+ urlParams.urlValues.join('&');
+    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1&'+ urlParams.urlValues.join('&');
     $.getJSON(urlCustom, function (results) {
         if (!_.isNil(results.data)) {
             var filteredData = results.data;
@@ -322,12 +313,12 @@ map.on('contextmenu', function (e) {
         searchParamsFormat = '&'.concat(searchParams.join('&'));
     }
 
-    var urlCustom = defaultValues.baseHrefUrl +
+    var urlCustom = MapsConfig.baseHrefUrl +
         '?zoom=' + e.target.getZoom() +
         '&lat=' + e.latlng.lat.toFixed(6) +
         '&lng=' + e.latlng.lng.toFixed(6) +
         searchParamsFormat;
-    var urlEmbedCustom = defaultValues.baseEmbedHrefUrl +
+    var urlEmbedCustom = MapsConfig.baseEmbedHrefUrl +
         '?zoom=' + e.target.getZoom() +
         '&lat=' + e.latlng.lat.toFixed(6) +
         '&lng=' + e.latlng.lng.toFixed(6) +
@@ -373,7 +364,7 @@ $("#featureModal").on("hidden.bs.modal", function (e) {
 $('#apply-filters').click(function() {
     document.getElementById("sidebar-news").style.display = "none";
     clearHighlight();
-    window.history.pushState({}, document.title, "/" + defaultValues.baseNewUrl );
+    window.history.pushState({}, document.title, "/" + MapsConfig.baseNewUrl );
 	showSpinner();
     var res = $('#feature-list tbody');
     res.empty();
@@ -381,8 +372,8 @@ $('#apply-filters').click(function() {
     unit_info.empty();
     markerClusters.removeLayer(units);
     map.setView(
-        [defaultValues.latGR, defaultValues.lngGR],
-        defaultValues.zoomGR
+        [MapsConfig.latGR, MapsConfig.lngGR],
+        MapsConfig.zoomGR
     );
     //empty points from map
     units = L.geoJson(null, {
@@ -432,7 +423,7 @@ $('#apply-filters').click(function() {
         searchParamsFormat = '&'.concat(searchParams.join('&'));
     }
     //TODO combine with custom url and create function
-    var urlCustom = defaultValues.baseMMUrl + 'units.geojson?state=1'+ searchParamsFormat;
+    var urlCustom = MapsConfig.baseMMUrl + 'units.geojson?state=1'+ searchParamsFormat;
     $.getJSON(urlCustom, function (results) {
         if (!_.isNil(results.data)) {
             var filteredData = results.data;

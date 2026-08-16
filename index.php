@@ -1,6 +1,8 @@
 <?php
-  if ($_SERVER['HTTP_HOST'] !== 'maps.sch.gr') {
-     header('Location: https://maps.sch.gr');
+  $config = require __DIR__ . '/config.php';
+  $canonicalHost = $config['canonical_host'] ?? null;
+  if ($canonicalHost !== null && ($_SERVER['HTTP_HOST'] ?? '') !== $canonicalHost) {
+     header('Location: https://' . $canonicalHost);
      die();
   }
 ?><!DOCTYPE html>
