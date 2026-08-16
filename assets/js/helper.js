@@ -227,65 +227,82 @@ function sanitization(string) {
 
 function onUnitClick(APIEndpoint) {
     $.getJSON(APIEndpoint, function (results) {
-        if (!_.isNil(results.data[0])) {
-            var unitData = results.data[0];
-            var registryNo = !_.isNil(unitData.registry_no) ? unitData.registry_no : '';
-            var eduAdmin = !_.isNil(unitData.edu_admin) ? unitData.edu_admin : '';
-            var regionEduAdmin = !_.isNil(unitData.region_edu_admin) ? unitData.region_edu_admin : '';
-            var municipality = !_.isNil(unitData.municipality) ? unitData.municipality : '';
-            var unitType = !_.isNil(unitData.unit_type) ? unitData.unit_type : '';
-            var orientationType = !_.isNil(unitData.orientation_type) ? unitData.orientation_type : '';
-            var operationShift = !_.isNil(unitData.operation_shift) ? unitData.operation_shift : '';
-            var streetAddress = !_.isNil(unitData.street_address) ? unitData.street_address : '';
-            var postalCode = !_.isNil(unitData.postal_code) ? unitData.postal_code : '';
-            var phoneNumber = !_.isNil(unitData.phone_number) ? unitData.phone_number : '';
-            var faxNumber = !_.isNil(unitData.fax_number) ? unitData.fax_number : '';
-            var email = !_.isNil(unitData.email) ? unitData.email : '';
-            var latitude = !_.isNil(unitData.latitude) ? unitData.latitude : 0;
-            var longitude = !_.isNil(unitData.longitude) ? unitData.longitude : 0;
-            $.getJSON(MapsConfig.mmSiteUrl + "client/views/sch_sites_export.php?mm_id=" + unitData.mm_id).then(function(sites) {
-                var content = "<table class='table table-striped table-bordered table-condensed'>" +
-                  "<tr><th>Όνομα</th><td>" + unitData.name +
-                  "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=" + MapsConfig.mmSiteUrl + "main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
-                  "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
-                  "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
-                  "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +
-                  "<tr><th>Δήμος</th><td>" + municipality + "</td></tr>" +
-                  "<tr><th>Τύπος Μονάδας</th><td>" + unitType + "</td></tr>" +
-                  "<tr><th>Προσανατολισμός</th><td>" + orientationType + "</td></tr>" +
-                  "<tr><th>Ιστότοποι</th><td>" + (sites?.data?.sites ? sites.data.sites.map((site) => {
-                      return "<a class='url-break' href='https://" + site.url + "' target='_blank'>" + site.url + "</a>";
-                  }).join("<br />") : "-") + "</td></tr>" +
-                  "<tr><th>Ωράριο Λειτουργίας</th><td>" + operationShift + "</td></tr>" +
-                  "<tr><th>Διεύθυνση</th><td>" + streetAddress + "</td></tr>" +
-                  "<tr><th>Τ.Κ.</th><td>" + postalCode + "</td></tr>" +
-                  "<tr><th>Τηλέφωνο</th><td>" + phoneNumber + "</td></tr>" +
-                  "<tr><th>Fax</th><td>" + faxNumber + "</td></tr>" +
-                  "<tr><th>Email</th><td>" + email + "</td></tr>" +
-                  "<table>";
-
-                $("#feature-title").html(unitData.name);
-                $("#feature-info").html(content);
-                $("#featureModal").modal('show');
-                map.setView([latitude, longitude], 18);
-                highlight.clearLayers().addLayer(
-                  L.circleMarker(
-                    [latitude, longitude],
-                    highlightStyle
-                  )
-                );
-
-                /* Hide sidebar and go to the map on small screens */
-                if (document.body.clientWidth <= 767) {
-                    $("#sidebar").hide();
-                    map.invalidateSize();
-                }
-            });
-        }
-        else {
+        if (_.isNil(results.data[0])) {
             //console.log('MM api connection error - Unit Info');
+            return;
         }
+        var unitData = results.data[0];
+
+        if (!MapsConfig.showUnitSites) {
+            showUnitModal(unitData, null);
+            return;
+        }
+        /* Websites live in a separate endpoint. Use always() so a failure there
+           still opens the modal, rather than swallowing it silently. */
+        $.getJSON(MapsConfig.mmSiteUrl + "client/views/sch_sites_export.php?mm_id=" + unitData.mm_id)
+            .always(function (sites) {
+                showUnitModal(unitData, sites);
+            });
     });
+}
+
+function showUnitModal(unitData, sites) {
+    var registryNo = !_.isNil(unitData.registry_no) ? unitData.registry_no : '';
+    var eduAdmin = !_.isNil(unitData.edu_admin) ? unitData.edu_admin : '';
+    var regionEduAdmin = !_.isNil(unitData.region_edu_admin) ? unitData.region_edu_admin : '';
+    var municipality = !_.isNil(unitData.municipality) ? unitData.municipality : '';
+    var unitType = !_.isNil(unitData.unit_type) ? unitData.unit_type : '';
+    var orientationType = !_.isNil(unitData.orientation_type) ? unitData.orientation_type : '';
+    var operationShift = !_.isNil(unitData.operation_shift) ? unitData.operation_shift : '';
+    var streetAddress = !_.isNil(unitData.street_address) ? unitData.street_address : '';
+    var postalCode = !_.isNil(unitData.postal_code) ? unitData.postal_code : '';
+    var phoneNumber = !_.isNil(unitData.phone_number) ? unitData.phone_number : '';
+    var faxNumber = !_.isNil(unitData.fax_number) ? unitData.fax_number : '';
+    var email = !_.isNil(unitData.email) ? unitData.email : '';
+    var latitude = !_.isNil(unitData.latitude) ? unitData.latitude : 0;
+    var longitude = !_.isNil(unitData.longitude) ? unitData.longitude : 0;
+
+    var sitesRow = '';
+    if (!_.isNil(sites)) {
+        sitesRow = "<tr><th>Ιστότοποι</th><td>" + (sites?.data?.sites ? sites.data.sites.map((site) => {
+            return "<a class='url-break' href='https://" + site.url + "' target='_blank'>" + site.url + "</a>";
+        }).join("<br />") : "-") + "</td></tr>";
+    }
+
+    var content = "<table class='table table-striped table-bordered table-condensed'>" +
+      "<tr><th>Όνομα</th><td>" + unitData.name +
+      "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=" + MapsConfig.mmSiteUrl + "main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
+      "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
+      "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
+      "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +
+      "<tr><th>Δήμος</th><td>" + municipality + "</td></tr>" +
+      "<tr><th>Τύπος Μονάδας</th><td>" + unitType + "</td></tr>" +
+      "<tr><th>Προσανατολισμός</th><td>" + orientationType + "</td></tr>" +
+      sitesRow +
+      "<tr><th>Ωράριο Λειτουργίας</th><td>" + operationShift + "</td></tr>" +
+      "<tr><th>Διεύθυνση</th><td>" + streetAddress + "</td></tr>" +
+      "<tr><th>Τ.Κ.</th><td>" + postalCode + "</td></tr>" +
+      "<tr><th>Τηλέφωνο</th><td>" + phoneNumber + "</td></tr>" +
+      "<tr><th>Fax</th><td>" + faxNumber + "</td></tr>" +
+      "<tr><th>Email</th><td>" + email + "</td></tr>" +
+      "<table>";
+
+    $("#feature-title").html(unitData.name);
+    $("#feature-info").html(content);
+    $("#featureModal").modal('show');
+    map.setView([latitude, longitude], 18);
+    highlight.clearLayers().addLayer(
+      L.circleMarker(
+        [latitude, longitude],
+        highlightStyle
+      )
+    );
+
+    /* Hide sidebar and go to the map on small screens */
+    if (document.body.clientWidth <= 767) {
+        $("#sidebar").hide();
+        map.invalidateSize();
+    }
 }
 
 function setTooltip(btn, message) {

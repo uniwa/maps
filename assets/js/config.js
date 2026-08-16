@@ -52,5 +52,10 @@ var MapsConfig = (function () {
         }
     }
 
+    /* The embedded map carries the link back to us, unless told otherwise */
+    if (config.embed && !overrides.tileAttribution) {
+        config.tileAttribution = config.embedAttribution;
+    }
+
     return config;
 })();

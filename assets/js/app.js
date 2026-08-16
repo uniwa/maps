@@ -22,6 +22,9 @@ var FILTERS = [
 ];
 
 $(document).ready(function() {
+    if (MapsConfig.embed) {
+        return;
+    }
     FILTERS.forEach(function (filter) {
         if (!filter.text) {
             $(filter.selector).select2({
@@ -230,8 +233,10 @@ var zoomControl = L.control.zoom({
 
 //-----------------------------Show markers to map-------------------------------------------------
 $('#units_info').empty();
-if (Array.isArray(urlParams.urlValues) && urlParams.urlValues.length === 0) {
-    loadUnits('', false);
+var initialQuery = urlParams.urlValues.join('&');
+/* The embedded map has no sidebar, so it never renders the result list */
+if (MapsConfig.embed || initialQuery === '') {
+    loadUnits(initialQuery, false);
 }
 else
 {
@@ -242,7 +247,7 @@ else
         [urlParams.lat, urlParams.lng],
         urlParams.zoom
     );
-    loadUnits(urlParams.urlValues.join('&'), true);
+    loadUnits(initialQuery, true);
 }
 
 
@@ -250,7 +255,9 @@ else
 map.on("click", function() {
     highlight.clearLayers();
 });
-//create href with right click
+//create href with right click. The embedded map has no share controls,
+//and embed.html does not load ClipboardJS.
+if (!MapsConfig.embed) {
 map.on('contextmenu', function (e) {
     var filters = collectFilters(true);
     var searchParamsFormat = filters ? '&' + filters : '';
@@ -284,6 +291,7 @@ map.on('contextmenu', function (e) {
         .addTo(map)
         .openOn(map);
 });
+}
 
 /* Highlight search box text on click TODO remove?*/
 $("#searchbox").click(function () {
