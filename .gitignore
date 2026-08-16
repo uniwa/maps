@@ -1,3 +1,7 @@
 .claude/
 .DS_Store
 config.local.php
+
+# Internal planning and notes -- kept out of the public repo
+docs/
+NOTES.local.md
