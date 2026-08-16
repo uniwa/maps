@@ -157,7 +157,7 @@ function getUrlParams()
         {
             return parseInt(item, 10);
         });
-        arrValues.push('operation_shifts=' + urlOperationShift);
+        arrValues.push('operation_shift=' + urlOperationShift);
     }
 
     return {
