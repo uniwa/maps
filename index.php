@@ -91,6 +91,14 @@
 						</p>
 						</div>	
 					</div>	
+					<div class="row">
+						<div class="col-md-12">
+							<p>
+								<strong><a href="https://mm.sch.gr" target="_blank" style="font-size : 70%;">Βοηθητικά δείτε το Μητρώο Μονάδων ΠΣΔ<br></a></strong>
+								<a href="https://mm.sch.gr" target="_blank"><img class="img-responsive" src="img/mm.png" /></a>
+							</p>
+						</div>
+					</div>
 				</div>
 				<div class="col-md-4">
 					<div class="row">&nbsp;</div>
