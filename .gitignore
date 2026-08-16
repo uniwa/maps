@@ -3,5 +3,6 @@
 config.local.php
 
 # Internal planning and notes -- kept out of the public repo
+CLAUDE.md
 docs/
 NOTES.local.md
