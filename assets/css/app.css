@@ -8,6 +8,7 @@ body {
 input[type="radio"], input[type="checkbox"] {
   margin: 0;
 }
+
 #sidebar {
   display: block;
   width: 280px;
@@ -140,6 +141,11 @@ input[type="radio"], input[type="checkbox"] {
   line-height: 34px;
   text-align: center;
 }
+.leaflet-popup-content {
+    min-width: 450px;
+    max-width: 450px;
+}
+
 @media (max-width: 992px) {
   .navbar .navbar-brand {
     font-size: 18px;

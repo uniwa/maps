@@ -54,7 +54,7 @@ function hideSpinner() {
     $('.kintone-spinner').hide();
 }
 
-//---------------------Get url functions---------------------
+//---------------------Get utr functions---------------------
 function getUrlVars() {
     var vars = {};
     var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
@@ -180,19 +180,6 @@ function getUrlParams()
 }
 
 //---------------------General functions---------------------
-function animateSidebar()
-{
-    $("#sidebar").animate({
-        width: "toggle"
-    }, 350, function () {
-        map.invalidateSize();
-    });
-}
-
-function clearHighlight() {
-    highlight.clearLayers();
-}
-
 function pointToLayer (feature, latlng) {
     return L.marker(latlng, {
         icon: L.icon({
@@ -217,14 +204,6 @@ function onEachFeature(feature,layer) {
     }
 }
 
-function sanitization(string) {
-    var sanitize_string='';
-    if (string) {
-        sanitize_string = string.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-    }
-    return sanitize_string;
-}
-
 function onUnitClick(APIEndpoint) {
     $.getJSON(APIEndpoint, function (results) {
         if (!_.isNil(results.data[0])) {
@@ -243,59 +222,42 @@ function onUnitClick(APIEndpoint) {
             var email = !_.isNil(unitData.email) ? unitData.email : '';
             var latitude = !_.isNil(unitData.latitude) ? unitData.latitude : 0;
             var longitude = !_.isNil(unitData.longitude) ? unitData.longitude : 0;
-            $.getJSON("https://mm.sch.gr/client/views/sch_sites_export.php?mm_id=" + unitData.mm_id).then(function(sites) {
-                var content = "<table class='table table-striped table-bordered table-condensed'>" +
-                  "<tr><th>Όνομα</th><td>" + unitData.name +
-                  "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=https://mm.sch.gr/main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
-                  "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
-                  "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
-                  "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +
-                  "<tr><th>Δήμος</th><td>" + municipality + "</td></tr>" +
-                  "<tr><th>Τύπος Μονάδας</th><td>" + unitType + "</td></tr>" +
-                  "<tr><th>Προσανατολισμός</th><td>" + orientationType + "</td></tr>" +
-                  "<tr><th>Ιστότοποι</th><td>" + (sites?.data?.sites ? sites.data.sites.map((site) => {
-                      return "<a class='url-break' href='https://" + site.url + "' target='_blank'>" + site.url + "</a>";
-                  }).join("<br />") : "-") + "</td></tr>" +
-                  "<tr><th>Ωράριο Λειτουργίας</th><td>" + operationShift + "</td></tr>" +
-                  "<tr><th>Διεύθυνση</th><td>" + streetAddress + "</td></tr>" +
-                  "<tr><th>Τ.Κ.</th><td>" + postalCode + "</td></tr>" +
-                  "<tr><th>Τηλέφωνο</th><td>" + phoneNumber + "</td></tr>" +
-                  "<tr><th>Fax</th><td>" + faxNumber + "</td></tr>" +
-                  "<tr><th>Email</th><td>" + email + "</td></tr>" +
-                  "<table>";
+            var content = "<table class='table table-striped table-bordered table-condensed'>" +
+                "<tr><th>Όνομα</th><td>" + unitData.name +
+                "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=https://mm.sch.gr/main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
+                "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
+                "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
+                "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +
+                "<tr><th>Δήμος</th><td>" + municipality + "</td></tr>" +
+                "<tr><th>Τύπος Μονάδας</th><td>" + unitType + "</td></tr>" +
+                "<tr><th>Προσανατολισμός</th><td>" + orientationType + "</td></tr>" +
+                "<tr><th>Ωράριο Λειτουργίας</th><td>" + operationShift + "</td></tr>" +
+                "<tr><th>Διεύθυνση</th><td>" + streetAddress + "</td></tr>" +
+                "<tr><th>Τ.Κ.</th><td>" + postalCode + "</td></tr>" +
+                "<tr><th>Τηλέφωνο</th><td>" + phoneNumber + "</td></tr>" +
+                "<tr><th>Fax</th><td>" + faxNumber + "</td></tr>" +
+                "<tr><th>Email</th><td>" + email + "</td></tr>" +
+                "<table>";
 
-                $("#feature-title").html(unitData.name);
-                $("#feature-info").html(content);
-                $("#featureModal").modal('show');
-                map.setView([latitude, longitude], 18);
-                highlight.clearLayers().addLayer(
-                  L.circleMarker(
+            $("#feature-title").html(unitData.name);
+            $("#feature-info").html(content);
+            $("#featureModal").modal('show');
+            map.setView([latitude, longitude], 18);
+            highlight.clearLayers().addLayer(
+                L.circleMarker(
                     [latitude, longitude],
                     highlightStyle
-                  )
-                );
+                )
+            );
 
-                /* Hide sidebar and go to the map on small screens */
-                if (document.body.clientWidth <= 767) {
-                    $("#sidebar").hide();
-                    map.invalidateSize();
-                }
-            });
+            /* Hide sidebar and go to the map on small screens */
+            if (document.body.clientWidth <= 767) {
+                $("#sidebar").hide();
+                map.invalidateSize();
+            }
         }
         else {
             //console.log('MM api connection error - Unit Info');
         }
     });
-}
-
-function setTooltip(btn, message) {
-    $(btn).tooltip('hide')
-        .attr('data-original-title', message)
-        .tooltip('show');
-}
-
-function hideTooltip(btn) {
-    setTimeout(function() {
-        $(btn).tooltip('hide');
-    }, 1000);
 }

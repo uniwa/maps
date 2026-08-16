@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+<?php
+  if ($_SERVER['HTTP_HOST'] !== 'maps.sch.gr') {
+     header('Location: https://maps.sch.gr');
+     die();
+  }
+?><!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -15,6 +20,7 @@
 <link rel="stylesheet" href="assets/libs/bootstrap/bootstrap.css">
 <script src="assets/libs/jquery/jquery-2.1.4.min.js"></script>
 <script src="assets/libs/bootstrap/bootstrap-3.3.5.min.js"></script>
+<script data-cookie-notice='{ "learnMoreLinkEnabled": true, "learnMoreLinkHref": "https://www.sch.gr/aboutcookies" }' src="assets/js/cookie.notice.js"></script>
 <style>
 .sch_logo_text {
     color: #1d73a3;
@@ -44,11 +50,12 @@
 	<div class="header">
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-8 col-xs-6">
+				<div class="col-md-12 col-xs-6">
 					<p class="pull-left"><img class="img-responsive" src="img/sch_logo.png" />&nbsp;&nbsp;&nbsp;</p>			
 					<p class="pull-left" style="padding-top:5px;"><strong><a href="http://www.sch.gr" style="color: #1d73a3;font: bold 20px Tahoma,sans-serif;">Πανελλήνιο Σχολικό Δίκτυο</a></strong><br>
 						<span class="sch_logo_text2">Το Δίκτυο στην Υπηρεσία της Εκπαίδευσης</span>
 					</p>
+					<p class="pull-right"><a href="https://www.uniwa.gr" target="_blank"><img src="img/pada_logo.png" style="width: 180px;" /></a></p>
 				</div>				
 			</div>
 		 </div>              
@@ -74,7 +81,7 @@
 						<ul class="list-group list-unstyled">
 						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Αναζήτηση Μονάδων με Όνομα Μονάδας</li> 
 						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Αναζήτηση Μονάδων με Κωδικό ΜΜ ή Κωδικό Υπουργείου</li> 
-						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Αναζήτηση Μονάδων με φίλτρο Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης και Τύπος Μονάδας</li>
+						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Αναζήτηση Μονάδων με φίλτρο Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης, Τύπο Μονάδας, Προσανατολισμό και Ωράριο Λειτουργίας</li>
 						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
 						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
 						<li><span class="glyphicon glyphicon-ok"></span>&nbsp;Δυνατότητα προβολής Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ</li>
@@ -106,6 +113,7 @@
 							Μπορείτε επίσης, να χρησιμοποιείτε και το online σύστημα καταγραφής προβλημάτων στη διεύθυνση <a href="https://helpdesk.sch.gr/?category_id=9508" target="_blank">https://helpdesk.sch.gr</a><br><br>
 							<a href="documents/user_guide_maps.pdf" target="_blank">Εγχειρίδιο Χρήσης</a><br>
 							<a href="documents/term_of_use_maps.pdf" target="_blank">Όροι Χρήσης</a><br>
+							<a href="https://www.sch.gr/dataprivacy/short.php" target="_blank">Προστασία Προσωπικών Δεδομένων</a><br>
 							</strong>
 							</div>
 						</div>
@@ -117,7 +125,7 @@
 	<div class="footer">
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-4"><p><img class="img-responsive" src="img/minedu.jpg" /></p></div>
+				<div class="col-md-4"><p><img class="img-responsive" src="img/mainlogo_p8.png" /></p></div>
 			</div>
 		</div>
 	</div>

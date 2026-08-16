@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="assets/libs/spin/spin.css">
     <link rel="stylesheet" href="assets/css/app.css">
     <script src="assets/libs/spin/spin.js"></script>
+    <script data-cookie-notice='{ "learnMoreLinkEnabled": true, "learnMoreLinkHref": "https://www.sch.gr/aboutcookies" }' src="assets/js/cookie.notice.js"></script>
     <link rel="apple-touch-icon" sizes="76x76" href="assets/img/favicon-76.png">
     <link rel="apple-touch-icon" sizes="120x120" href="assets/img/favicon-120.png">
     <link rel="apple-touch-icon" sizes="152x152" href="assets/img/favicon-152.png">
@@ -661,7 +662,39 @@
                   </label>
                 </div>
               </div>
-
+            <div class="row">
+                <div class="col-xs-12 col-md-12">
+                    <label for="orientation_type">
+                        Προσανατολισμός
+                        <select id="orientation_type" class="js-example-basic-multiple js-states form-control" name="orientation_types[]" multiple="multiple">
+                            <option value="1">ΔΙΑΠΟΛΙΤΙΣΜΙΚΟ</option>
+                            <option value="2">ΜΟΥΣΙΚΟ</option>
+                            <option value="3">ΚΑΛΛΙΤΕΧΝΙΚΟ</option>
+                            <option value="4">ΠΡΟΤΥΠΟ ΠΕΙΡΑΜΑΤΙΚΟ</option>
+                            <option value="5">ΕΥΡΩΠΑΙΚΗΣ ΠΑΙΔΕΙΑΣ</option>
+                            <option value="6">ΜΕΙΟΝΟΤΙΚΟ</option>
+                            <option value="7">ΕΚΚΛΗΣΙΑΣΤΙΚΟ</option>
+                            <option value="8">ΑΘΛΗΤΙΚΟ</option>
+                            <option value="9">ΕΞΩΤΕΡΙΚΟΥ</option>
+                            <option value="10">ΠΡΟΤΥΠΟ</option>
+                            <option value="11">ΠΕΙΡΑΜΑΤΙΚΟ</option>
+                            <option value="12">ΞΕΝΟ</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-md-12">
+                    <label for="operation_shift">
+                        Ωράριο Λειτουργίας
+                        <select id="operation_shift" class="js-example-basic-multiple js-states form-control" name="operation_shifts[]" multiple="multiple">
+                            <option value="1">ΗΜΕΡΗΣΙΟ</option>
+                            <option value="2">ΕΣΠΕΡΙΝΟ</option>
+                            <option value="3">ΟΛΟΗΜΕΡΟ</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
               <div class="row">
                 <div class="col-xs-6 col-md-6">
                   <button id="apply-filters" type="button" class="btn btn-primary pull-right sort" data-sort="feature-name" id="sort-btn"><i class="fa fa-search"></i> Αναζήτηση</button>
@@ -678,6 +711,7 @@
                 <tbody class="list"></tbody>
               </table>
             </div>
+              <div class="panel-footer" id="sidebar-news"><h3 class="panel-title"><br><b>Νέα Λειτουργικότητα!</b><br><br>Κάντε δεξί κλίκ πάνω στο σχολείο, ώστε να πάρετε τον απευθείας σύνδεσμο ή/και τον κώδικα iframe για να προσθέσετε τον χάρτη στον ιστότοπό σας.</h3></div>
           </div>
         </div>
       </div>
@@ -707,10 +741,11 @@
                   <ul class="list-group">
                     <li class="list-group-item">Αναζήτηση Μονάδων με Όνομα Μονάδας (ελέυθερο κείμενο)</li>
                     <li class="list-group-item">Αναζήτηση Μονάδων με Κωδικό ΜΜ ή Κωδικό Υπουργείου (ακριβής κωδικός)</li>
-                    <li class="list-group-item">Αναζήτηση Μονάδων με φίλτρα Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης και Τύπος Μονάδας (επιλογή από λίστα)</li>
+                    <li class="list-group-item">Αναζήτηση Μονάδων με φίλτρα Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης, Τύπο Μονάδας, Προσανατολισμό και Ωράριο Λειτουργίας (επιλογή από λίστα)</li>
                     <li class="list-group-item">Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
                     <li class="list-group-item">Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
-                    <li class="list-group-item">Δυνατότητα προβολής Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (χρήση δεξιού κλίκ)</li>
+                    <li class="list-group-item">Δυνατότητα διαμοιρασμού του Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (χρήση δεξιού κλίκ και επιλογή "Αντιγραφή Συνδέσμου")</li>
+                    <li class="list-group-item">Δυνατότητα χρήσης του Χάρτη ώς embed με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (χρήση δεξιού κλίκ και επιλογή "Αντιγραφή Iframe")</li>
                   </ul>
                 </div>
               </div>
@@ -764,6 +799,7 @@
     <script src="assets/libs/leaflet/leaflet-1.6.0.min.js "></script>
     <script src="assets/libs/leaflet-markercluster/leaflet.markercluster-1.4.1.min.js"></script>
     <script src="assets/libs/lodash/lodash.min.js"></script>
+    <script src="assets/libs/clipboard/clipboard.min.js"></script>
     <script src="assets/js/helper.js"></script>
     <script src="assets/js/app.js"></script>
   </body>

@@ -1,0 +1,36 @@
+html, body, #container {
+  height: 100%;
+  width: 100%;
+}
+iframe {
+    overflow: hidden;
+}
+
+#map {
+  width: auto;
+  height: 100%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+#loading {
+  position: absolute;
+  width: 220px;
+  height: 19px;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -110px;
+  z-index: 20001;
+}
+
+@media (max-width: 767px){
+  .url-break {
+    word-break: break-all;
+    -webkit-hyphens: auto;
+      hyphens: auto;
+  }
+}
+/* Print Handling */
+@media print {
+  .leaflet-control-container {
+    display: none !important;
+  }
+}

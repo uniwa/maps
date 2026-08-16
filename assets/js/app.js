@@ -2,6 +2,7 @@ showSpinner();
 defaultValues = {
     baseMMUrl : 'https://mm.sch.gr/api/',
     baseHrefUrl : 'https://maps.sch.gr/main.html',
+    baseEmbedHrefUrl : 'https://maps.sch.gr/embed.html',
     baseNewUrl : 'main.html',
     latGR : '38.1',
     lngGR : '24.2',
@@ -35,6 +36,31 @@ $(document).ready(function() {
             (a, b) => a.text.localeCompare(b.text)
         )
     });
+    $('#orientation_type').select2({
+            placeholder: '',
+            sorter: data => data.sort(
+            (a, b) => a.text.localeCompare(b.text)
+    )
+    });
+    $('#operation_shift').select2({
+            placeholder: '',
+            sorter: data => data.sort(
+            (a, b) => a.text.localeCompare(b.text)
+    )
+    });
+
+    if (!_.isEmpty(urlParams.searchValues.name))
+    {
+        $('.form-control.search_name').val(urlParams.searchValues.name).trigger('change');
+    }
+    if (!_.isEmpty(urlParams.searchValues.mmID))
+    {
+        $('.form-control.search_mm_id').val(urlParams.searchValues.mmID).trigger('change');
+    }
+    if (!_.isEmpty(urlParams.searchValues.registryNo))
+    {
+        $('.form-control.search_registry_no').val(urlParams.searchValues.registryNo).trigger('change');
+    }
     if (!_.isEmpty(urlParams.searchValues.eduAdmins))
     {
         $('#edu_admin').val(urlParams.searchValues.eduAdmins).trigger('change');
@@ -50,6 +76,14 @@ $(document).ready(function() {
     if (!_.isEmpty(urlParams.searchValues.unitTypes))
     {
         $('#unit_type').val(urlParams.searchValues.unitTypes).trigger('change');
+    }
+    if (!_.isEmpty(urlParams.searchValues.orientationTypes))
+    {
+        $('#orientation_type').val(urlParams.searchValues.orientationTypes).trigger('change');
+    }
+    if (!_.isEmpty(urlParams.searchValues.operationShifts))
+    {
+        $('#operation_shift').val(urlParams.searchValues.operationShifts).trigger('change');
     }
 });
 
@@ -83,6 +117,8 @@ $("#reset").click(function() {
     $('#region_edu_admin').val('').trigger('change');
     $('#municipality').val('').trigger('change');
     $('#unit_type').val('').trigger('change');
+    $('#orientation_type').val('').trigger('change');
+    $('#operation_shift').val('').trigger('change');
     $(':input').val('');
 });
 
@@ -125,7 +161,7 @@ $("#sidebar-hide-btn").click(function() {
 var baseMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=el", {
     maxZoom: 19,
     lang: 'el',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
 });
 /* Overlay Layers */
 var highlight = L.geoJson(null);
@@ -187,6 +223,7 @@ if (Array.isArray(urlParams.urlValues) && urlParams.urlValues.length === 0) {
 }
 else
 {
+    document.getElementById("sidebar-news").style.display = "none";
     var res = $('#feature-list tbody');
     res.empty();
     markerClusters.removeLayer(units);
@@ -251,15 +288,17 @@ map.on('contextmenu', function (e) {
     var regionEduAdmins = $('#region_edu_admin').val();
     var municipalities = $('#municipality').val();
     var unitTypes = $('#unit_type').val();
+    var orientationTypes = $('#orientation_type').val();
+    var operationShifts = $('#operation_shift').val();
     var searchParamsFormat = '';
     if (name) {
-        searchParams.push('name=' + name);
+        searchParams.push('name=' + encodeURI(name));
     }
     if (mmId) {
-        searchParams.push('mm_id=' + mmId);
+        searchParams.push('mm_id=' + encodeURI(mmId));
     }
     if (registryNo) {
-        searchParams.push('registry_no=' + registryNo);
+        searchParams.push('registry_no=' + encodeURI(registryNo));
     }
     if (eduAdmins) {
         searchParams.push('edu_admin=' + eduAdmins);
@@ -273,8 +312,14 @@ map.on('contextmenu', function (e) {
     if (unitTypes) {
         searchParams.push('unit_type=' + unitTypes);
     }
+    if (orientationTypes) {
+        searchParams.push('orientation_type=' + orientationTypes);
+    }
+    if (operationShifts) {
+        searchParams.push('operation_shift=' + operationShifts);
+    }
     if (Array.isArray(searchParams) && searchParams.length > 0) {
-        searchParamsFormat = '&amp'.concat(searchParams.join('&amp'));
+        searchParamsFormat = '&'.concat(searchParams.join('&'));
     }
 
     var urlCustom = defaultValues.baseHrefUrl +
@@ -282,9 +327,27 @@ map.on('contextmenu', function (e) {
         '&lat=' + e.latlng.lat.toFixed(6) +
         '&lng=' + e.latlng.lng.toFixed(6) +
         searchParamsFormat;
-    L.popup({maxWidth: 800})
+    var urlEmbedCustom = defaultValues.baseEmbedHrefUrl +
+        '?zoom=' + e.target.getZoom() +
+        '&lat=' + e.latlng.lat.toFixed(6) +
+        '&lng=' + e.latlng.lng.toFixed(6) +
+        searchParamsFormat;
+    var iframeLarge = '<iframe src=&#34;' + urlEmbedCustom + '&#34; width=&#34;800&#34; height=&#34;600&#34; frameborder=&#34;0&#34; scrolling=&#34;no&#34;></iframe>';
+
+    // Clipboard
+    var clipboard = new ClipboardJS('.btn');
+    clipboard.on('success', function(e) {
+        setTooltip(e.trigger, 'Επιτυχία Αντιγραφής');
+        hideTooltip(e.trigger);
+    });
+    clipboard.on('error', function(e) {
+        setTooltip(e.trigger, 'Αποτυχία Αντιγραφής');
+        hideTooltip(e.trigger);
+    });
+
+    L.popup()
         .setLatLng(e.latlng)
-        .setContent('<pre>'+urlCustom+'</pre>')
+        .setContent('<pre>Αντιγραφή Συνδέσμου : <input id="shared_link" value="' + urlCustom + '" readonly="true" type="text"><button class="btn" data-clipboard-action="copy" data-clipboard-target="#shared_link"><img src="assets/img/clippy-16.svg" alt="Αντιγραφή στο πρόχειρο"></button><br>Αντιγραφή Iframe    : <input id="embed_map" value="' + iframeLarge + '" readonly="true" type="text"><button class="btn" data-clipboard-action="copy" data-clipboard-target="#embed_map"><img src="assets/img/clippy-16.svg" alt="Αντιγραφή στο πρόχειρο"></button><br><br>Για τα blogs.sch.gr και schoolpress.sch.gr απλώς<br>αντιγράψτε και επικολλήστε τον Σύνδεσμο μέσα στο άρθρο σας.</pre>')
         .addTo(map)
         .openOn(map);
 });
@@ -308,6 +371,7 @@ $("#featureModal").on("hidden.bs.modal", function (e) {
 
 //run when user click at search
 $('#apply-filters').click(function() {
+    document.getElementById("sidebar-news").style.display = "none";
     clearHighlight();
     window.history.pushState({}, document.title, "/" + defaultValues.baseNewUrl );
 	showSpinner();
@@ -334,7 +398,9 @@ $('#apply-filters').click(function() {
     var eduAdmins = $('#edu_admin').val();
     var regionEduAdmins = $('#region_edu_admin').val();
     var municipalities = $('#municipality').val();
-    var unitTypes =  $('#unit_type').val();
+    var unitTypes = $('#unit_type').val();
+    var orientationTypes = $('#orientation_type').val();
+    var operationShifts = $('#operation_shift').val();
     if (name) {
         searchParams.push('name='+name);
     }
@@ -355,6 +421,12 @@ $('#apply-filters').click(function() {
     }
     if (unitTypes) {
         searchParams.push('unit_type='+unitTypes);
+    }
+    if (orientationTypes) {
+        searchParams.push('orientation_type='+orientationTypes);
+    }
+    if (operationShifts) {
+        searchParams.push('operation_shift='+operationShifts);
     }
     if (Array.isArray(searchParams) && searchParams.length > 0) {
         searchParamsFormat = '&'.concat(searchParams.join('&'));
