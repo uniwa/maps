@@ -311,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (initialQuery === '') {
         loadUnits('', false);
     } else {
-        document.getElementById('sidebar-news').hidden = true;
         body.replaceChildren();
         resetUnitsLayer();
         map.setView([urlParams.lat, urlParams.lng], urlParams.zoom);
@@ -341,7 +340,6 @@ if (MapsConfig.embed) {
 }
 
 function applyFilters() {
-    document.getElementById('sidebar-news').hidden = true;
     clearHighlight();
     window.history.pushState({}, document.title, MapsConfig.baseNewUrl);
     showSpinner();

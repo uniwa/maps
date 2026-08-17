@@ -350,15 +350,6 @@ a { color: var(--brand); }
     text-align: center;
 }
 
-.sidebar-note {
-    flex: none;
-    padding: 10px 12px;
-    background: var(--bg-soft);
-    border-top: 1px solid var(--line);
-    font-size: 12.5px;
-    color: var(--ink-soft);
-}
-.sidebar-note strong { display: block; color: var(--ink); }
 
 /* --------------------------------------------------------------- dialogs */
 
@@ -503,14 +494,25 @@ a { color: var(--brand); }
 
 /* --------------------------------------------------------------- spinner */
 
+/* Deliberately not a blocking curtain: the search box and filters work while
+   the units are still arriving, and a full-screen dim implied otherwise. */
 .spinner-overlay {
     position: fixed;
     inset: 0;
     z-index: 1500;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
+    padding-top: 18px;
+    background: none;
+    pointer-events: none;
+}
+
+.spinner-overlay .spinner-dial {
+    border-color: rgba(0, 0, 0, 0.15);
+    border-top-color: var(--brand);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
 }
 
 .spinner-overlay[hidden] { display: none; }
