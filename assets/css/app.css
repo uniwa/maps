@@ -205,3 +205,36 @@ input[type="radio"], input[type="checkbox"] {
 @media (prefers-reduced-motion: reduce) {
     .spinner-dial { animation-duration: 2.4s; }
 }
+
+/* Share popup, opened by right-clicking the map */
+.share-popup .share-field {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.share-popup .share-field label {
+    display: block;
+    flex: 1;
+    margin: 0;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+.share-popup .share-field input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.share-popup .share-hint {
+    margin: 0;
+    font-size: 12px;
+    color: #555;
+}

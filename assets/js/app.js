@@ -255,8 +255,64 @@ else
 map.on("click", function() {
     highlight.clearLayers();
 });
-//create href with right click. The embedded map has no share controls,
-//and embed.html does not load ClipboardJS.
+/**
+ * Builds one labelled read-only field with a copy button.
+ * Replaces clipboard.js, which needed the value to live in the DOM first so
+ * it could be selected by id.
+ */
+function shareField(label, value) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'share-field';
+
+    var caption = document.createElement('label');
+    caption.textContent = label;
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.readOnly = true;
+    input.value = value;
+    input.addEventListener('focus', function () { input.select(); });
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn';
+    button.title = 'Αντιγραφή στο πρόχειρο';
+    button.innerHTML = '<img src="assets/img/clippy-16.svg" alt="Αντιγραφή στο πρόχειρο">';
+    button.addEventListener('click', function () {
+        copyText(value).then(function (ok) {
+            button.title = ok ? 'Επιτυχία Αντιγραφής' : 'Αποτυχία Αντιγραφής';
+            setTimeout(function () { button.title = 'Αντιγραφή στο πρόχειρο'; }, 1500);
+        });
+    });
+
+    caption.appendChild(input);
+    wrapper.appendChild(caption);
+    wrapper.appendChild(button);
+    return wrapper;
+}
+
+/* navigator.clipboard needs a secure context, so keep a fallback for plain
+   http, which is how a dev instance is usually served. */
+function copyText(value) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(value)
+            .then(function () { return true; })
+            .catch(function () { return false; });
+    }
+    var scratch = document.createElement('textarea');
+    scratch.value = value;
+    scratch.setAttribute('readonly', '');
+    scratch.style.position = 'fixed';
+    scratch.style.opacity = '0';
+    document.body.appendChild(scratch);
+    scratch.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    document.body.removeChild(scratch);
+    return Promise.resolve(ok);
+}
+
+//create href with right click. The embedded map has no share controls.
 if (!MapsConfig.embed) {
 map.on('contextmenu', function (e) {
     var filters = collectFilters(true);
@@ -272,22 +328,21 @@ map.on('contextmenu', function (e) {
         '&lat=' + e.latlng.lat.toFixed(6) +
         '&lng=' + e.latlng.lng.toFixed(6) +
         searchParamsFormat;
-    var iframeLarge = '<iframe src=&#34;' + urlEmbedCustom + '&#34; width=&#34;800&#34; height=&#34;600&#34; frameborder=&#34;0&#34; scrolling=&#34;no&#34;></iframe>';
+    var iframeLarge = '<iframe src="' + urlEmbedCustom + '" width="800" height="600" frameborder="0" scrolling="no"></iframe>';
 
-    // Clipboard
-    var clipboard = new ClipboardJS('.btn');
-    clipboard.on('success', function(e) {
-        setTooltip(e.trigger, 'Επιτυχία Αντιγραφής');
-        hideTooltip(e.trigger);
-    });
-    clipboard.on('error', function(e) {
-        setTooltip(e.trigger, 'Αποτυχία Αντιγραφής');
-        hideTooltip(e.trigger);
-    });
+    var share = document.createElement('div');
+    share.className = 'share-popup';
+    share.appendChild(shareField('Αντιγραφή Συνδέσμου', urlCustom));
+    share.appendChild(shareField('Αντιγραφή Iframe', iframeLarge));
+
+    var hint = document.createElement('p');
+    hint.className = 'share-hint';
+    hint.innerHTML = 'Για τα blogs.sch.gr και schoolpress.sch.gr απλώς<br>αντιγράψτε και επικολλήστε τον Σύνδεσμο μέσα στο άρθρο σας.';
+    share.appendChild(hint);
 
     L.popup()
         .setLatLng(e.latlng)
-        .setContent('<pre>Αντιγραφή Συνδέσμου : <input id="shared_link" value="' + urlCustom + '" readonly="true" type="text"><button class="btn" data-clipboard-action="copy" data-clipboard-target="#shared_link"><img src="assets/img/clippy-16.svg" alt="Αντιγραφή στο πρόχειρο"></button><br>Αντιγραφή Iframe    : <input id="embed_map" value="' + iframeLarge + '" readonly="true" type="text"><button class="btn" data-clipboard-action="copy" data-clipboard-target="#embed_map"><img src="assets/img/clippy-16.svg" alt="Αντιγραφή στο πρόχειρο"></button><br><br>Για τα blogs.sch.gr και schoolpress.sch.gr απλώς<br>αντιγράψτε και επικολλήστε τον Σύνδεσμο μέσα στο άρθρο σας.</pre>')
+        .setContent(share)
         .addTo(map)
         .openOn(map);
 });
