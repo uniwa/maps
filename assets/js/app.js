@@ -267,26 +267,14 @@ document.addEventListener('DOMContentLoaded', function () {
         expandPanel();
         document.getElementById('advanced-filters').open = true;
     });
-    document.getElementById('rail-menu').addEventListener('click', function () {
-        expandPanel();
-        document.getElementById('panel-menu').open = true;
-    });
+    /* The footer carries these, so opening the sidebar is what reveals them */
+    document.getElementById('rail-menu').addEventListener('click', expandPanel);
 
-    /* The menu is a <details>; close it once it has done its job */
-    var menu = document.getElementById('panel-menu');
     document.getElementById('about-btn').addEventListener('click', function () {
-        menu.open = false;
         openModal('aboutModal');
     });
     document.getElementById('legend-btn').addEventListener('click', function () {
-        menu.open = false;
         openModal('legendModal');
-    });
-    menu.addEventListener('click', function (event) {
-        if (event.target.closest('a')) menu.open = false;
-    });
-    document.addEventListener('click', function (event) {
-        if (menu.open && !menu.contains(event.target)) menu.open = false;
     });
 
     document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);

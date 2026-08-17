@@ -64,9 +64,10 @@
             <svg class="icon" aria-hidden="true"><use href="#i-list"></use></svg>
             <span class="sr-only">Φίλτρα</span>
           </button>
-          <button type="button" class="rail-btn" id="rail-menu" title="Μενού">
-            <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
-            <span class="sr-only">Μενού</span>
+          <button type="button" class="rail-btn rail-btn-foot" id="rail-menu"
+                  title="Πληροφορίες και όροι χρήσης">
+            <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
+            <span class="sr-only">Πληροφορίες και όροι χρήσης</span>
           </button>
         </div>
 
@@ -91,26 +92,6 @@
                      role="combobox" aria-expanded="false" aria-autocomplete="list"
                      aria-controls="search-suggestions">
 
-              <details class="panel-menu" id="panel-menu">
-                <summary title="Μενού" data-testid="menu-toggle">
-                  <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
-                  <span class="sr-only">Μενού</span>
-                </summary>
-                <div class="panel-menu-list">
-                  <button type="button" id="about-btn">
-                    <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>Πληροφορίες
-                  </button>
-                  <button type="button" id="legend-btn">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>Επικοινωνία
-                  </button>
-                  <a href="documents/user_guide_maps.pdf" download target="_blank" rel="noopener">
-                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Εγχειρίδιο Χρήστη
-                  </a>
-                  <a href="documents/term_of_use_maps.pdf" download target="_blank" rel="noopener">
-                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Όροι Χρήσης
-                  </a>
-                </div>
-              </details>
             </div>
             <ul class="suggestions" id="search-suggestions" data-testid="suggestions"
                 role="listbox" aria-label="Προτάσεις αναζήτησης" hidden></ul>
@@ -172,6 +153,16 @@
               <caption class="sr-only">Αποτελέσματα αναζήτησης μονάδων</caption>
               <tbody class="list"></tbody>
             </table>
+          </div>
+
+          <!-- Footer material: about the service, how to reach us, the manual
+               and the terms. Not tools, so it sits at the bottom rather than in
+               the search box, where it was implying it had to do with searching. -->
+          <div class="sidebar-footer" data-testid="sidebar-footer">
+            <button type="button" id="about-btn">Πληροφορίες</button>
+            <button type="button" id="legend-btn">Επικοινωνία</button>
+            <a href="documents/user_guide_maps.pdf" download target="_blank" rel="noopener">Εγχειρίδιο</a>
+            <a href="documents/term_of_use_maps.pdf" download target="_blank" rel="noopener">Όροι Χρήσης</a>
           </div>
         </form>
         </div>
