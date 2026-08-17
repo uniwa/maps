@@ -186,7 +186,7 @@ function showUnitModal(unitData, sites) {
     var body = document.createElement('tbody');
     table.appendChild(body);
 
-    body.appendChild(unitRow('Όνομα', unitData.name));
+    /* The name is the panel's heading, so repeating it as a row is noise */
     body.appendChild(unitRow('Κωδικός ΜΜ', unitLink(
         MapsConfig.mmSiteUrl + 'main.php?auth=0&mm_id=' + encodeURIComponent(unitData.mm_id),
         unitData.mm_id)));
@@ -222,23 +222,68 @@ function showUnitModal(unitData, sites) {
     var info = document.getElementById('feature-info');
     info.replaceChildren(table);
 
-    openModal('featureModal');
+    openUnitPanel();
 
     map.setView([latitude, longitude], 18);
     highlight.clearLayers().addLayer(
         L.circleMarker([latitude, longitude], highlightStyle)
     );
+    keepUnitInView();
 
-    /* On a narrow screen, get out of the way of the map */
+    /* On a narrow screen the details take over, so fold the filters away */
     var sidebar = document.getElementById('sidebar');
     if (sidebar && !window.matchMedia('(min-width: 900px)').matches) {
         sidebar.classList.remove('is-open');
+        var toggle = document.getElementById('sidebar-toggle-btn');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
         map.invalidateSize();
     }
 }
 
-/* <dialog> replaces the Bootstrap modal. Closing is handled by the
-   method="dialog" forms in the markup, and Escape works for free. */
+/**
+ * Unit details live in a panel rather than a dialog, so the map stays visible
+ * and the pin you just clicked keeps its context. A modal covered the very
+ * thing the visitor was looking at.
+ */
+function openUnitPanel() {
+    var panel = document.getElementById('unit-panel');
+    if (!panel) return;
+    panel.hidden = false;
+    /* Next frame, so the transition runs from the off-screen position */
+    window.requestAnimationFrame(function () {
+        panel.classList.add('is-open');
+    });
+    document.getElementById('feature-title').focus();
+}
+
+/**
+ * On a phone the details sheet covers the lower half of the map, which is
+ * exactly where setView just put the unit. Shift the view up so the pin sits
+ * in the part still visible, the way map apps do when a card opens.
+ */
+function keepUnitInView() {
+    var panel = document.getElementById('unit-panel');
+    if (!panel || panel.hidden) return;
+    if (window.matchMedia('(min-width: 900px)').matches) return;
+
+    window.requestAnimationFrame(function () {
+        var covered = panel.getBoundingClientRect().height;
+        if (covered > 0) {
+            map.panBy([0, covered / 2], { animate: false });
+        }
+    });
+}
+
+function closeUnitPanel() {
+    var panel = document.getElementById('unit-panel');
+    if (!panel || panel.hidden) return;
+    panel.classList.remove('is-open');
+    panel.hidden = true;
+    clearHighlight();
+}
+
+/* <dialog> replaces the Bootstrap modal for the informational popups. Closing
+   is handled by the method="dialog" forms in the markup, and Escape is free. */
 function openModal(id) {
     var dialog = document.getElementById(id);
     if (!dialog) return;

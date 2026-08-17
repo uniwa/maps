@@ -30,16 +30,19 @@
       <div id="map" data-testid="map"></div>
     </div>
 
-    <dialog class="modal" id="featureModal" aria-labelledby="feature-title">
-      <form method="dialog" class="modal-head">
-        <h2 id="feature-title" data-testid="unit-title"></h2>
-        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
-      </form>
-      <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
-      <form method="dialog" class="modal-foot">
-        <button class="btn" value="close">Κλείσιμο</button>
-      </form>
-    </dialog>
+    <!-- Unit details as a bottom sheet, so the map stays visible inside the
+         iframe. A dialog could exceed the frame it is embedded in. -->
+    <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
+             aria-labelledby="feature-title" hidden>
+      <header class="unit-panel-head">
+        <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
+        <button type="button" class="icon-btn" id="unit-panel-close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+          <span class="sr-only">Κλείσιμο</span>
+        </button>
+      </header>
+      <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
+    </section>
 
     <script src="assets/libs/leaflet/leaflet-1.6.0.min.js"></script>
     <script src="assets/libs/leaflet-markercluster/leaflet.markercluster-1.4.1.min.js"></script>

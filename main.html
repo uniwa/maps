@@ -97,11 +97,22 @@
         </div>
 
         <form class="sidebar-filters" id="filters" novalidate>
+          <div class="search-box">
+            <label class="sr-only" for="search_name">Όνομα Μονάδας</label>
+            <div class="search-input">
+              <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+              <input type="search" id="search_name" class="search search_name"
+                     placeholder="Αναζήτηση μονάδας…" autocomplete="off"
+                     role="combobox" aria-expanded="false" aria-autocomplete="list"
+                     aria-controls="search-suggestions">
+            </div>
+            <ul class="suggestions" id="search-suggestions" data-testid="suggestions"
+                role="listbox" aria-label="Προτάσεις αναζήτησης" hidden></ul>
+          </div>
+
+          <details class="advanced-filters" id="advanced-filters">
+            <summary data-testid="filters-toggle">Περισσότερα φίλτρα</summary>
           <div class="filter-fields">
-          <p class="field">
-            <label for="search_name">Όνομα Μονάδας</label>
-            <input type="search" id="search_name" class="search search_name" autocomplete="off">
-          </p>
           <p class="field">
             <label for="search_mm_id">Κωδικός ΜΜ</label>
             <input type="search" id="search_mm_id" class="search search_mm_id" autocomplete="off" inputmode="numeric">
@@ -136,6 +147,7 @@
           </p>
 
           </div>
+          </details>
 
           <div class="sidebar-actions">
             <button id="apply-filters" type="submit" class="btn btn-primary">
@@ -161,6 +173,21 @@
       </aside>
 
       <div id="map" data-testid="map"></div>
+
+      <!-- Unit details. A panel rather than a modal, so the map stays visible
+           and the selected pin keeps its context: a side card on a wide screen,
+           a bottom sheet on a narrow one. -->
+      <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
+               aria-labelledby="feature-title" hidden>
+        <header class="unit-panel-head">
+          <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
+          <button type="button" class="icon-btn" id="unit-panel-close">
+            <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+            <span class="sr-only">Κλείσιμο</span>
+          </button>
+        </header>
+        <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
+      </section>
     </div>
 
     <dialog class="modal modal-lg" id="aboutModal" aria-labelledby="aboutModal-title">
@@ -207,22 +234,13 @@
       </form>
     </dialog>
 
-    <dialog class="modal" id="featureModal" aria-labelledby="feature-title">
-      <form method="dialog" class="modal-head">
-        <h2 id="feature-title" data-testid="unit-title"></h2>
-        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
-      </form>
-      <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
-      <form method="dialog" class="modal-foot">
-        <button class="btn" value="close">Κλείσιμο</button>
-      </form>
-    </dialog>
 
     <script src="assets/libs/leaflet/leaflet-1.6.0.min.js"></script>
     <script src="assets/libs/leaflet-markercluster/leaflet.markercluster-1.4.1.min.js"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/lookups.js"></script>
     <script src="assets/js/multiselect.js"></script>
+    <script src="assets/js/search.js"></script>
     <script src="assets/js/helper.js"></script>
     <script src="assets/js/app.js"></script>
   </body>

@@ -277,8 +277,34 @@ document.addEventListener('DOMContentLoaded', function () {
         openModal('legendModal');
     });
 
-    /* The map should be reachable again once a unit's details are closed */
-    document.getElementById('featureModal').addEventListener('close', clearHighlight);
+    document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);
+
+    /* Escape closes the details panel, matching the dialogs' behaviour */
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeUnitPanel();
+        }
+    });
+
+    /* Search-as-you-type: picking a suggestion goes straight to that unit */
+    MapsSearch({
+        onPick: function (item) {
+            map.setView([item.lat, item.lng], 17);
+            onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + item.mmId);
+        }
+    });
+
+    /* A name typed into the search box is still a filter, so open the
+       disclosure when the URL carried one of the other eight. */
+    var advanced = document.getElementById('advanced-filters');
+    var hasAdvanced = FILTERS.some(function (filter) {
+        if (filter.param === 'name') return false;
+        var value = urlParams.searchValues[filter.urlKey];
+        return value && value.length;
+    });
+    if (advanced && hasAdvanced) {
+        advanced.open = true;
+    }
 
     //-----------------------------Show markers to map---------------------------
     var initialQuery = urlParams.urlValues.join('&');
@@ -301,8 +327,16 @@ document.addEventListener('DOMContentLoaded', function () {
     void container;
 });
 
-/* The embedded map has no sidebar, so it renders no result list */
+/* The embedded map has no sidebar, so it renders no result list. It does have
+   the details panel, which needs its close button and Escape wired up. */
 if (MapsConfig.embed) {
+    document.addEventListener('DOMContentLoaded', function () {
+        var close = document.getElementById('unit-panel-close');
+        if (close) close.addEventListener('click', closeUnitPanel);
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeUnitPanel();
+        });
+    });
     loadUnits(urlParams.urlValues.join('&'), false);
 }
 

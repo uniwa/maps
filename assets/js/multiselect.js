@@ -121,10 +121,30 @@ function MapsMultiSelect(container, options) {
         container.dispatchEvent(new CustomEvent('change', { bubbles: true }));
     }
 
+    /* The panel is position:fixed, so it has to be placed against the toggle
+       each time it opens. Absolute positioning would be clipped by the
+       scrolling list of filters. */
+    function place() {
+        var rect = toggle.getBoundingClientRect();
+        var below = window.innerHeight - rect.bottom;
+        panel.style.left = rect.left + 'px';
+        panel.style.width = rect.width + 'px';
+        if (below < 220 && rect.top > below) {
+            panel.style.top = 'auto';
+            panel.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
+            panel.style.maxHeight = Math.max(160, rect.top - 12) + 'px';
+        } else {
+            panel.style.bottom = 'auto';
+            panel.style.top = (rect.bottom + 2) + 'px';
+            panel.style.maxHeight = Math.max(160, below - 12) + 'px';
+        }
+    }
+
     function open() {
         if (state.open) return;
         state.open = true;
         panel.hidden = false;
+        place();
         toggle.setAttribute('aria-expanded', 'true');
         state.activeIndex = -1;
         search.value = '';
@@ -176,8 +196,15 @@ function MapsMultiSelect(container, options) {
     });
 
     document.addEventListener('click', function (event) {
-        if (state.open && !container.contains(event.target)) close();
+        if (state.open && !container.contains(event.target) && !panel.contains(event.target)) {
+            close();
+        }
     });
+
+    /* Scrolling or resizing would leave a fixed panel detached from its
+       toggle, so follow the toggle instead of drifting away from it. */
+    window.addEventListener('resize', function () { if (state.open) place(); });
+    document.addEventListener('scroll', function () { if (state.open) place(); }, true);
 
     return {
         element: container,
