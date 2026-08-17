@@ -995,3 +995,28 @@ a { color: var(--brand); }
     border-radius: 50%;
     background: var(--brand);
 }
+
+/* Details are open before the registry answers; this stands in meanwhile */
+.unit-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 16px 14px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+}
+
+.unit-loading-dial {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    border: 2px solid rgba(0, 0, 0, 0.14);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: spinner-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .unit-loading-dial { animation-duration: 2.4s; }
+}

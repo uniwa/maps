@@ -112,6 +112,7 @@ function featureRow(feature, distanceText) {
     row.className = 'feature-row';
     row.dataset.testid = 'feature-row';
     row.dataset.mmId = feature.properties.mmId;
+    row.dataset.name = feature.properties.name;
     row.dataset.lat = feature.geometry.coordinates[1];
     row.dataset.lng = feature.geometry.coordinates[0];
 
@@ -339,7 +340,11 @@ document.addEventListener('DOMContentLoaded', function () {
     body.addEventListener('click', function (event) {
         var row = event.target.closest('.feature-row');
         if (!row) return;
-        onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + row.dataset.mmId);
+        onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + row.dataset.mmId, {
+            name: row.dataset.name,
+            lat: row.dataset.lat,
+            lng: row.dataset.lng
+        });
     });
 
     if (!('ontouchstart' in window)) {
@@ -366,15 +371,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('panel-collapse').addEventListener('click', togglePanel);
 
-    /* The rail's icons expand the sidebar and go straight to the thing they
-       stand for, rather than only expanding it and leaving you to look. */
+    /* The rail carries search and the footer material, nothing else: opening
+       straight into the filters was a confusing place to arrive. */
     document.getElementById('rail-search').addEventListener('click', function () {
         expandPanel();
         document.getElementById('search_name').focus();
-    });
-    document.getElementById('rail-filters').addEventListener('click', function () {
-        expandPanel();
-        document.getElementById('advanced-filters').open = true;
     });
     /* The footer carries these, so opening the sidebar is what reveals them */
     document.getElementById('rail-menu').addEventListener('click', expandPanel);
@@ -414,8 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /* Search-as-you-type: picking a suggestion goes straight to that unit */
     MapsSearch({
         onPick: function (item) {
-            map.setView([item.lat, item.lng], 17);
-            onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + item.mmId);
+            onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + item.mmId, item);
         }
     });
 

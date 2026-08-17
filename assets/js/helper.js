@@ -138,13 +138,62 @@ function onEachFeature(feature,layer) {
         layer.on({
             click: function() {
                 var APIEndpoint = MapsConfig.baseMMUrl + 'units?mm_id=' + feature.properties.mmId;
-                return onUnitClick(APIEndpoint);
+                return onUnitClick(APIEndpoint, {
+                    name: feature.properties.name,
+                    lat: feature.geometry.coordinates[1],
+                    lng: feature.geometry.coordinates[0]
+                });
             }
         });
     }
 }
 
-function onUnitClick(APIEndpoint) {
+/**
+ * Opens the details straight away, with whatever is already known, and fills the
+ * rest in when the registry answers.
+ *
+ * The name and position come from the point that was clicked, so the panel and
+ * the map move immediately. Waiting for the fetch first meant a click did
+ * nothing visible for a few hundred milliseconds.
+ */
+function showUnitLoading(preview) {
+    var title = document.getElementById('feature-title');
+    var info = document.getElementById('feature-info');
+    if (!title || !info) return;
+
+    title.textContent = (preview && preview.name) ? preview.name : 'Φόρτωση…';
+
+    var loading = document.createElement('p');
+    loading.className = 'unit-loading';
+    loading.dataset.testid = 'unit-loading';
+    loading.setAttribute('role', 'status');
+    loading.innerHTML = '<span class="unit-loading-dial"></span>';
+    loading.appendChild(document.createTextNode('Φόρτωση στοιχείων…'));
+    info.replaceChildren(loading);
+
+    openUnitPanel();
+
+    if (preview && isFinite(preview.lat) && isFinite(preview.lng)) {
+        map.setView([Number(preview.lat), Number(preview.lng)], 18);
+        highlight.clearLayers().addLayer(
+            L.circleMarker([Number(preview.lat), Number(preview.lng)], highlightStyle)
+        );
+    }
+}
+
+function showUnitError() {
+    var info = document.getElementById('feature-info');
+    if (!info) return;
+    var message = document.createElement('p');
+    message.className = 'unit-loading';
+    message.dataset.testid = 'unit-error';
+    message.textContent = 'Δεν ήταν δυνατή η φόρτωση των στοιχείων.';
+    info.replaceChildren(message);
+}
+
+function onUnitClick(APIEndpoint, preview) {
+    showUnitLoading(preview);
+
     fetch(APIEndpoint)
         .then(function (response) { return response.json(); })
         .then(function (results) {
@@ -166,6 +215,7 @@ function onUnitClick(APIEndpoint) {
         })
         .catch(function (err) {
             console.error('MM api connection error - Unit Info', err);
+            showUnitError();
         });
 }
 
