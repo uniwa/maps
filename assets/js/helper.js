@@ -224,6 +224,14 @@ function showUnitModal(unitData, sites) {
     body.appendChild(unitRow('Fax', unitData.fax_number ?? ''));
     body.appendChild(unitRow('Email', unitData.email ?? ''));
 
+    /* Only once the visitor has asked where they are: otherwise there is no
+       point of reference and the row would be meaningless. */
+    if (typeof located !== 'undefined' && located && isFinite(latitude) && isFinite(longitude)) {
+        body.appendChild(unitRow('Απόσταση', MapsNearby.format(
+            MapsNearby.distance(located.lat, located.lng, Number(latitude), Number(longitude))
+        ) + ' σε ευθεία γραμμή'));
+    }
+
     document.getElementById('feature-title').textContent = unitData.name;
     var info = document.getElementById('feature-info');
     info.replaceChildren(table);

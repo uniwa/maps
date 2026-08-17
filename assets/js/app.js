@@ -25,6 +25,13 @@ var FILTERS = [
 /* param -> multi-select instance, for the filters backed by a reference list */
 var filterControls = {};
 
+/* The features currently on the map, kept for proximity: whatever is loaded is
+   what "nearest" means, so on a filtered view it is the nearest match. */
+var loadedFeatures = [];
+
+/* Where the visitor is, once they have asked. null until then. */
+var located = null;
+
 function initFilters() {
     FILTERS.forEach(function (filter) {
         var value = urlParams.searchValues[filter.urlKey];
@@ -97,7 +104,7 @@ function resetUnitsLayer() {
 }
 
 /* One result row, built as DOM so unit names need no escaping */
-function featureRow(feature) {
+function featureRow(feature, distanceText) {
     var row = document.createElement('tr');
     row.className = 'feature-row';
     row.dataset.testid = 'feature-row';
@@ -116,6 +123,13 @@ function featureRow(feature) {
     var nameCell = document.createElement('td');
     nameCell.className = 'feature-name';
     nameCell.textContent = feature.properties.name;
+
+    if (distanceText) {
+        var distance = document.createElement('span');
+        distance.className = 'feature-distance';
+        distance.textContent = distanceText;
+        nameCell.appendChild(distance);
+    }
 
     var chevronCell = document.createElement('td');
     chevronCell.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg>';
@@ -162,6 +176,7 @@ function loadUnits(query, renderList) {
                     body.appendChild(fragment);
                 }
             }
+            loadedFeatures = results.data.features || [];
             units.addData(results.data);
             markerClusters.addLayer(units);
             hideSpinner();
@@ -215,6 +230,76 @@ attributionControl.onAdd = function () {
 };
 map.addControl(attributionControl);
 L.control.zoom({ position: "bottomright" }).addTo(map);
+
+/* Where am I, and what is near me: the half of the navigation work that needs
+   no routing provider. */
+var youAreHere = L.layerGroup().addTo(map);
+
+/* The embed has no sidebar to list results in, and does not load nearby.js */
+if (!MapsConfig.embed) {
+    MapsNearby.locateControl({
+        onLocate: showNearest,
+        onError: function (message) {
+            var info = document.getElementById('units_info');
+            if (info) info.textContent = message;
+        }
+    }).addTo(map);
+}
+
+/**
+ * Marks the visitor's position and lists the closest units to it.
+ *
+ * "Closest" means closest among the units currently loaded, so with a filter
+ * applied it answers "the nearest ΓΥΜΝΑΣΙΟ" rather than the nearest anything.
+ */
+function showNearest(lat, lng, accuracy) {
+    located = { lat: lat, lng: lng };
+
+    youAreHere.clearLayers();
+    L.circleMarker([lat, lng], {
+        radius: 7,
+        color: '#fff',
+        weight: 2,
+        fillColor: '#1a73e8',
+        fillOpacity: 1
+    }).addTo(youAreHere);
+    if (accuracy && accuracy > 40) {
+        L.circle([lat, lng], {
+            radius: accuracy,
+            color: '#1a73e8',
+            weight: 1,
+            fillColor: '#1a73e8',
+            fillOpacity: 0.1
+        }).addTo(youAreHere);
+    }
+
+    var closest = MapsNearby.nearest(loadedFeatures, lat, lng, 15);
+    var info = document.getElementById('units_info');
+    var body = document.querySelector('#feature-list tbody');
+
+    if (closest.length === 0) {
+        info.textContent = 'Δεν βρέθηκαν μονάδες κοντά σας.';
+        return;
+    }
+
+    expandPanel();
+    info.textContent = 'Κοντινότερες μονάδες στη θέση σας';
+
+    body.replaceChildren();
+    var fragment = document.createDocumentFragment();
+    closest.forEach(function (hit) {
+        fragment.appendChild(featureRow(hit.feature, MapsNearby.format(hit.metres)));
+    });
+    body.appendChild(fragment);
+
+    /* Frame the visitor and the nearest handful, rather than jumping to a fixed
+       zoom that might contain none of them. */
+    map.fitBounds(L.latLngBounds(
+        [[lat, lng]].concat(closest.slice(0, 5).map(function (hit) {
+            return [hit.feature.geometry.coordinates[1], hit.feature.geometry.coordinates[0]];
+        }))
+    ), { padding: [60, 60], maxZoom: 15 });
+}
 
 //-----------------------------Wire up the interface----------------------------
 document.addEventListener('DOMContentLoaded', function () {

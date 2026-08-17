@@ -833,3 +833,31 @@ a { color: var(--brand); }
 
 /* The same material at the foot of the rail, pushed down away from the tools */
 .rail-btn-foot { margin-top: auto; }
+
+/* ------------------------------------------------------------- proximity */
+
+/* Leaflet's own control chrome, so it sits with the zoom buttons */
+.locate-control button {
+    display: block;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+.locate-control button:hover { background: #f4f4f4; }
+.locate-control .icon { width: 17px; height: 17px; vertical-align: -3px; }
+
+.locate-control button.is-busy { color: var(--brand); }
+.locate-control button.is-busy .icon { animation: spinner-spin 1.1s linear infinite; }
+
+/* The distance sits under the name rather than in its own column: at 260px a
+   column would squeeze the names further. */
+.feature-distance {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink-soft);
+    font-size: 11px;
+}
