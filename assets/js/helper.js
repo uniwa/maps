@@ -84,8 +84,12 @@ function setPanelCollapsed(collapsed)
 
     container.classList.toggle('panel-collapsed', collapsed);
 
-    /* Opening the sidebar is seeing whatever the dot was about */
-    if (!collapsed) {
+    if (collapsed) {
+        /* Details are the sidebar's content, so collapsing closes them. Left
+           open they were squeezed into the width of the rail. */
+        closeUnitPanel();
+    } else {
+        /* Opening the sidebar is seeing whatever the dot was about */
         var news = document.getElementById('rail-search');
         if (news) news.classList.remove('has-news');
     }

@@ -426,9 +426,10 @@ a { color: var(--brand); }
 /* ---------------------------------------------------------------- phone */
 
 @media (max-width: 899px) {
-    /* Full width less the tab strip, so the tab that closes the sidebar is
-       still on screen while it is open. */
-    .panel { width: calc(100% - 18px); }
+    /* Leaves a strip of map down the right: wide enough to tap deliberately,
+       since tapping the map is how the sidebar is put away. 18px was the tab
+       and nothing else, which made it a fiddly target. */
+    .panel { width: calc(100% - 48px); }
 
     /* A narrower rail: on a phone every pixel of map counts, and the mark's
        job -- saying whose service this is -- matters less here than the map. */

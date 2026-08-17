@@ -543,18 +543,13 @@ function dismissGeoHint(remember) {
 }
 
 /**
- * A click on open map is a way out of whatever is open: first the details, then
- * the sidebar itself. The collapse tab is deliberately small, and on a touch
- * screen a 18px target is hard to hit, so the whole map doubles as one.
+ * A click on open map puts the sidebar away, which closes any open details with
+ * it. One tap, not two: needing a second one to finish the job was worse than
+ * the small collapse tab it was meant to make up for.
  */
 map.on("click", function () {
     highlight.clearLayers();
-    if (MapsConfig.embed) return;
-
-    var details = document.getElementById('unit-panel');
-    if (details && !details.hidden) {
-        closeUnitPanel();
-    } else {
+    if (!MapsConfig.embed) {
         setPanelCollapsed(true);
     }
 });
