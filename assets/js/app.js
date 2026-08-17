@@ -314,7 +314,7 @@ $("#featureModal").on("hidden.bs.modal", function (e) {
 $('#apply-filters').click(function() {
     document.getElementById("sidebar-news").style.display = "none";
     clearHighlight();
-    window.history.pushState({}, document.title, "/" + MapsConfig.baseNewUrl );
+    window.history.pushState({}, document.title, MapsConfig.baseNewUrl);
     showSpinner();
     $('#feature-list tbody').empty();
     $('#units_info').empty();

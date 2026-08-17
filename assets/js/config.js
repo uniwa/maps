@@ -12,6 +12,11 @@ var MapsConfig = (function () {
     var origin = window.location.origin ||
         (window.location.protocol + '//' + window.location.host);
 
+    /* The directory the app is served from, with a trailing slash. Production
+       serves it at the root of maps.sch.gr; staging serves it under /maps/. */
+    var basePath = window.location.pathname.replace(/[^\/]*$/, '');
+    var baseUrl = origin + basePath;
+
     var attributionOSM = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors';
 
     var config = {
@@ -20,10 +25,11 @@ var MapsConfig = (function () {
         mmSiteUrl : 'https://mm.sch.gr/',
 
         /* Our own URLs, used for the shareable link and the iframe snippet.
-           Derived from the current origin so a staging instance links to itself. */
-        baseHrefUrl : origin + '/main.html',
-        baseEmbedHrefUrl : origin + '/embed.html',
-        baseNewUrl : 'main.html',
+           Derived from where this page is actually served, so an instance under
+           a subdirectory links to itself rather than to the domain root. */
+        baseHrefUrl : baseUrl + 'main.html',
+        baseEmbedHrefUrl : baseUrl + 'embed.html',
+        baseNewUrl : basePath + 'main.html',
 
         /* Initial view: the whole of Greece */
         latGR : '38.1',
@@ -35,7 +41,7 @@ var MapsConfig = (function () {
         tileMaxZoom : 19,
         tileAttribution : attributionOSM,
         /* The embedded map carries a link back to us, since it is shown on other sites */
-        embedAttribution : '<a href="' + origin + '" target="_blank">Χάρτης Μονάδων ΠΣΔ</a><br>' + attributionOSM,
+        embedAttribution : '<a href="' + baseUrl + '" target="_blank">Χάρτης Μονάδων ΠΣΔ</a><br>' + attributionOSM,
 
         /* Set by embed.html. Disables the sidebar, filters and share controls. */
         embed : false,
