@@ -7,41 +7,71 @@ var urlParams = getUrlParams();
  *
  * `param`  - the query parameter the registry expects
  * `urlKey` - the corresponding key in urlParams.searchValues
- * `text`   - free-text input rather than a select2 dropdown
+ * `text`   - free-text input; anything else is a multi-select fed by `lookup`
+ * `lookup` - the registry reference list the options come from
  */
 var FILTERS = [
     { param: 'name',             urlKey: 'name',             selector: '.form-control.search_name',        text: true },
     { param: 'mm_id',            urlKey: 'mmID',             selector: '.form-control.search_mm_id',       text: true },
     { param: 'registry_no',      urlKey: 'registryNo',       selector: '.form-control.search_registry_no', text: true },
-    { param: 'edu_admin',        urlKey: 'eduAdmins',        selector: '#edu_admin' },
-    { param: 'region_edu_admin', urlKey: 'regionEduAdmins',  selector: '#region_edu_admin' },
-    { param: 'municipality',     urlKey: 'municipalities',   selector: '#municipality' },
-    { param: 'unit_type',        urlKey: 'unitTypes',        selector: '#unit_type' },
-    { param: 'orientation_type', urlKey: 'orientationTypes', selector: '#orientation_type' },
-    { param: 'operation_shift',  urlKey: 'operationShifts',  selector: '#operation_shift' }
+    { param: 'edu_admin',        urlKey: 'eduAdmins',        selector: '#edu_admin',        lookup: 'edu_admins' },
+    { param: 'region_edu_admin', urlKey: 'regionEduAdmins',  selector: '#region_edu_admin', lookup: 'region_edu_admins' },
+    { param: 'municipality',     urlKey: 'municipalities',   selector: '#municipality',     lookup: 'municipalities' },
+    { param: 'unit_type',        urlKey: 'unitTypes',        selector: '#unit_type',        lookup: 'unit_types' },
+    { param: 'orientation_type', urlKey: 'orientationTypes', selector: '#orientation_type', lookup: 'orientation_types' },
+    { param: 'operation_shift',  urlKey: 'operationShifts',  selector: '#operation_shift',  lookup: 'operation_shifts' }
 ];
 
-$(document).ready(function() {
-    if (MapsConfig.embed) {
-        return;
+/* param -> multi-select instance, for the filters backed by a reference list */
+var filterControls = {};
+
+$(document).ready(function () {
+    if (!MapsConfig.embed) {
+        initFilters();
     }
-    FILTERS.forEach(function (filter) {
-        if (!filter.text) {
-            $(filter.selector).select2({
-                placeholder: '',
-                sorter: function (data) {
-                    return data.sort(function (a, b) {
-                        return a.text.localeCompare(b.text);
-                    });
-                }
-            });
-        }
-        var value = urlParams.searchValues[filter.urlKey];
-        if (value && value.length) {
-            $(filter.selector).val(value).trigger('change');
-        }
-    });
 });
+
+function initFilters() {
+    FILTERS.forEach(function (filter) {
+        var value = urlParams.searchValues[filter.urlKey];
+
+        if (filter.text) {
+            if (value && value.length) {
+                $(filter.selector).val(value);
+            }
+            return;
+        }
+
+        var container = document.querySelector(filter.selector);
+        if (!container) {
+            return;
+        }
+
+        var control = MapsMultiSelect(container, {
+            placeholder: 'Όλα',
+            labelledBy: filter.param + '-label'
+        });
+        filterControls[filter.param] = control;
+
+        /* Apply the URL's selection first, so a shared link shows its filters
+           immediately rather than after nine lookup requests land. */
+        if (value && value.length) {
+            control.setValue(value);
+        }
+
+        MapsLookups.load(filter.lookup)
+            .then(function (items) {
+                control.setItems(items);
+                if (value && value.length) {
+                    control.setValue(value);
+                }
+            })
+            .catch(function (err) {
+                console.error('Could not load ' + filter.lookup, err);
+                container.classList.add('ms-unavailable');
+            });
+    });
+}
 
 /**
  * Reads the sidebar controls and returns the active filters as a query string.
@@ -51,7 +81,9 @@ $(document).ready(function() {
 function collectFilters(encodeText) {
     var params = [];
     FILTERS.forEach(function (filter) {
-        var value = $(filter.selector).val();
+        var value = filter.text
+            ? $(filter.selector).val()
+            : (filterControls[filter.param] ? filterControls[filter.param].getValue() : null);
         if (!value || value.length === 0) {
             return;
         }
@@ -140,10 +172,8 @@ $(document).on("mouseout", ".feature-row", clearHighlight);
 //left column-----------------------------------------------------
 //reset button
 $("#reset").click(function() {
-    FILTERS.forEach(function (filter) {
-        if (!filter.text) {
-            $(filter.selector).val('').trigger('change');
-        }
+    Object.keys(filterControls).forEach(function (param) {
+        filterControls[param].clear();
     });
     $(':input').val('');
 });
