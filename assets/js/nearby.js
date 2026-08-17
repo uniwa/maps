@@ -114,10 +114,37 @@ var MapsNearby = (function () {
         );
     }
 
+    /**
+     * Locates the visitor on load, but only if they have already granted the
+     * permission on a previous visit.
+     *
+     * There is no permission-free way to read a device position: geolocation
+     * always prompts. Firing that prompt on page load is a poor trade -- it
+     * arrives before the visitor knows what the page is, is usually declined,
+     * and in Chrome a request without user activation can be auto-blocked, which
+     * would cost us the capability permanently for that person. So: silent for
+     * anyone who has already said yes, and the button for everyone else.
+     */
+    function locateIfPermitted(options) {
+        if (!navigator.permissions || !navigator.permissions.query) return;
+
+        navigator.permissions.query({ name: 'geolocation' })
+            .then(function (status) {
+                if (status.state !== 'granted') return;
+                var button = document.getElementById('locate-btn');
+                if (button) locate(button, options);
+            })
+            .catch(function () {
+                /* Safari has historically not supported querying this. No harm:
+                   the visitor can still press the button. */
+            });
+    }
+
     return {
         distance: distance,
         format: format,
         nearest: nearest,
-        locateControl: locateControl
+        locateControl: locateControl,
+        locateIfPermitted: locateIfPermitted
     };
 })();

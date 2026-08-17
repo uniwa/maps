@@ -69,29 +69,20 @@ function getUrlParams()
 }
 
 //---------------------General functions---------------------
-/** Expands the sidebar if it is currently narrowed to the rail. */
-function expandPanel()
-{
-    var container = document.getElementById('container');
-    if (container && container.classList.contains('panel-collapsed')) {
-        togglePanel();
-    }
-}
-
 /**
- * Narrows the sidebar to its icon rail, and back.
+ * Narrows the sidebar to its icon rail, or opens it out again.
  *
  * The state lives on the container so both the rail and the tab can respond to
- * it. Collapsing leaves the rail behind rather than hiding the sidebar: there is
+ * it. Collapsed leaves the rail behind rather than hiding the sidebar: there is
  * always something on screen identifying the service and offering a way back.
  */
-function togglePanel()
+function setPanelCollapsed(collapsed)
 {
     var container = document.getElementById('container');
     var toggle = document.getElementById('panel-collapse');
     if (!container) return;
 
-    var collapsed = container.classList.toggle('panel-collapsed');
+    container.classList.toggle('panel-collapsed', collapsed);
     if (toggle) {
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         toggle.querySelector('.sr-only').textContent = collapsed
@@ -101,6 +92,18 @@ function togglePanel()
     if (typeof map !== 'undefined' && map) {
         map.invalidateSize();
     }
+}
+
+function togglePanel()
+{
+    var container = document.getElementById('container');
+    setPanelCollapsed(!container.classList.contains('panel-collapsed'));
+}
+
+/** Opens the sidebar if it is currently narrowed to the rail. */
+function expandPanel()
+{
+    setPanelCollapsed(false);
 }
 
 function clearHighlight() {

@@ -169,12 +169,12 @@ a { color: var(--brand); }
     position: absolute;
     z-index: 1;
     top: 50%;
-    right: -26px;
-    width: 26px;
-    height: 52px;
+    right: -18px;
+    width: 18px;
+    height: 40px;
     padding: 0;
     border: 0;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 6px 6px 0;
     background: var(--bg);
     color: var(--ink-soft);
     box-shadow: 2px 0 6px rgba(0, 0, 0, 0.16);
@@ -182,7 +182,7 @@ a { color: var(--brand); }
     cursor: pointer;
 }
 .panel-tab:hover { color: var(--ink); background: var(--bg-soft); }
-.panel-tab .icon { transition: transform 0.2s; }
+.panel-tab .icon { width: 13px; height: 13px; transition: transform 0.2s; }
 #container.panel-collapsed .panel-tab .icon { transform: rotate(180deg); }
 
 /* Identity while the sidebar is away */
@@ -428,7 +428,14 @@ a { color: var(--brand); }
 @media (max-width: 899px) {
     /* Full width less the tab strip, so the tab that closes the sidebar is
        still on screen while it is open. */
-    .panel { width: calc(100% - 26px); }
+    .panel { width: calc(100% - 18px); }
+
+    /* A narrower rail: on a phone every pixel of map counts, and the mark's
+       job -- saying whose service this is -- matters less here than the map. */
+    #container.panel-collapsed .panel { width: 40px; }
+    .panel-rail { width: 40px; }
+    .rail-brand { display: none; }
+    .rail-btn { width: 40px; height: 42px; }
 }
 
 /* --------------------------------------------------------------- spinner */

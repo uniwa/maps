@@ -32,6 +32,9 @@ var loadedFeatures = [];
 /* Where the visitor is, once they have asked. null until then. */
 var located = null;
 
+/* A location that arrived before the units did, to be answered once they land */
+var pendingNearest = null;
+
 function initFilters() {
     FILTERS.forEach(function (filter) {
         var value = urlParams.searchValues[filter.urlKey];
@@ -180,6 +183,11 @@ function loadUnits(query, renderList) {
             units.addData(results.data);
             markerClusters.addLayer(units);
             hideSpinner();
+
+            /* A location that was waiting for these */
+            if (pendingNearest) {
+                showNearest(pendingNearest.lat, pendingNearest.lng, pendingNearest.accuracy);
+            }
         })
         .catch(function (err) {
             console.error('MM api connection error - ' + url, err);
@@ -236,14 +244,16 @@ L.control.zoom({ position: "bottomright" }).addTo(map);
 var youAreHere = L.layerGroup().addTo(map);
 
 /* The embed has no sidebar to list results in, and does not load nearby.js */
+var locateOptions = {
+    onLocate: showNearest,
+    onError: function (message) {
+        var info = document.getElementById('units_info');
+        if (info) info.textContent = message;
+    }
+};
+
 if (!MapsConfig.embed) {
-    MapsNearby.locateControl({
-        onLocate: showNearest,
-        onError: function (message) {
-            var info = document.getElementById('units_info');
-            if (info) info.textContent = message;
-        }
-    }).addTo(map);
+    MapsNearby.locateControl(locateOptions).addTo(map);
 }
 
 /**
@@ -273,10 +283,20 @@ function showNearest(lat, lng, accuracy) {
         }).addTo(youAreHere);
     }
 
-    var closest = MapsNearby.nearest(loadedFeatures, lat, lng, 15);
     var info = document.getElementById('units_info');
     var body = document.querySelector('#feature-list tbody');
 
+    /* On a plain visit the location can arrive before the units do -- the fix
+       is instant, the 379 KB of units is not -- so hold the position and answer
+       it once they land, rather than reporting nothing nearby. */
+    if (loadedFeatures.length === 0) {
+        pendingNearest = { lat: lat, lng: lng, accuracy: accuracy };
+        info.textContent = 'Αναζήτηση κοντινών μονάδων…';
+        return;
+    }
+    pendingNearest = null;
+
+    var closest = MapsNearby.nearest(loadedFeatures, lat, lng, 15);
     if (closest.length === 0) {
         info.textContent = 'Δεν βρέθηκαν μονάδες κοντά σας.';
         return;
@@ -393,8 +413,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //-----------------------------Show markers to map---------------------------
     var initialQuery = urlParams.urlValues.join('&');
+
+    /* Start narrowed to the rail, so the map leads. A link carrying filters is
+       the exception: 87% of real visits arrive that way, and they arrive to see
+       results -- landing them on a bare rail would hide the very thing the link
+       was shared for. */
+    setPanelCollapsed(initialQuery === '');
+
     if (initialQuery === '') {
         loadUnits('', false);
+
+        /* Nothing specific was asked for, so show what is nearby -- but only
+           for visitors who have already granted the permission. A cold prompt
+           on load is not worth what it costs. */
+        MapsNearby.locateIfPermitted(locateOptions);
     } else {
         body.replaceChildren();
         resetUnitsLayer();
