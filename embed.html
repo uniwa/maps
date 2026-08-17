@@ -35,11 +35,13 @@
     <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
              aria-labelledby="feature-title" hidden>
       <header class="unit-panel-head">
-        <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
-        <button type="button" class="icon-btn" id="unit-panel-close">
-          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span class="sr-only">Κλείσιμο</span>
-        </button>
+        <div class="unit-panel-headline">
+          <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
+          <button type="button" class="icon-btn" id="unit-panel-close">
+            <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+            <span class="sr-only">Κλείσιμο</span>
+          </button>
+        </div>
       </header>
       <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
     </section>

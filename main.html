@@ -38,6 +38,7 @@
       <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
       <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></symbol>
       <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.4 7-11a7 7 0 10-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M15.7 6.3l-7.4 4.4M8.3 13.3l7.4 4.4"/></symbol>
     </svg>
 
     <a class="skip-link" href="#feature-list">Μετάβαση στα αποτελέσματα</a>
@@ -170,11 +171,25 @@
         <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
                  aria-labelledby="feature-title" hidden>
           <header class="unit-panel-head">
+            <div class="unit-panel-headline">
             <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
-            <button type="button" class="icon-btn" id="unit-panel-close">
-              <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
-              <span class="sr-only">Κλείσιμο</span>
-            </button>
+            <div class="unit-panel-tools">
+              <!-- The address bar already carries the open unit; this is the
+                   discoverable way to get at it, and on a phone it hands the
+                   link to the share sheet. -->
+              <button type="button" class="icon-btn" id="unit-panel-share"
+                      data-testid="unit-share" title="Κοινοποίηση συνδέσμου">
+                <svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg>
+                <span class="sr-only">Κοινοποίηση συνδέσμου</span>
+              </button>
+              <button type="button" class="icon-btn" id="unit-panel-close">
+                <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+                <span class="sr-only">Κλείσιμο</span>
+              </button>
+            </div>
+            </div>
+            <p class="unit-share-note" id="unit-share-note" data-testid="share-note"
+               role="status" hidden></p>
           </header>
           <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
         </section>
@@ -224,6 +239,7 @@
           <li>Αναζήτηση Μονάδων με φίλτρα Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης, Τύπο Μονάδας, Προσανατολισμό και Ωράριο Λειτουργίας (επιλογή από λίστα)</li>
           <li>Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
           <li>Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
+          <li>Διαμοιρασμός συνδέσμου προς συγκεκριμένη Μονάδα (εικονίδιο κοινοποίησης στην καρτέλα της)</li>
           <li>Δυνατότητα διαμοιρασμού του Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Συνδέσμου»)</li>
           <li>Δυνατότητα χρήσης του Χάρτη ως embed με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Iframe»)</li>
         </ul>

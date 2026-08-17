@@ -774,16 +774,38 @@ a { color: var(--brand); }
 
 .unit-panel-head {
     flex: none;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
     padding: 12px 14px;
     border-bottom: 1px solid var(--line);
 }
 
+/* A row of its own for the title and its buttons. Wrapping them in one flex
+   line instead would put the buttons under a long name: with flex-wrap on, a
+   title wider than the space breaks the line rather than shrinking. */
+.unit-panel-headline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.unit-panel-tools {
+    flex: none;
+    display: flex;
+    gap: 6px;
+}
+
+/* Confirmation for the share button, on its own line under the title rather
+   than floating over the card. */
+.unit-share-note {
+    margin: 6px 0 0;
+    font-size: 11.5px;
+    color: var(--brand);
+}
+.unit-share-note[hidden] { display: none; }
+
 .unit-panel-head h2 {
     margin: 0;
+    min-width: 0;
     font-size: 14px;
     line-height: 1.3;
     color: var(--brand);

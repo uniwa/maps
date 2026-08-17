@@ -62,10 +62,56 @@ function getUrlParams()
     return {
         urlValues: arrValues,
         searchValues: searchValues,
+        /* The open unit. Deliberately not part of urlValues: it is a selection,
+           not a filter, so it is never sent to the registry. */
+        unit: getUrlParam('unit', ''),
         zoom: getUrlParam('zoom', MapsConfig.zoomGR),
         lat: getUrlParam('lat', MapsConfig.latGR),
         lng: getUrlParam('lng', MapsConfig.lngGR)
     };
+}
+
+//---------------------The open unit, in the address bar---------------------
+/* Which unit's details are showing, so the share button knows what it is
+   pointing at. null when the panel is closed. */
+var selectedUnit = null;
+
+/**
+ * Reflects the open unit in the address bar, so the URL in front of the visitor
+ * is the one worth copying.
+ *
+ * `unit` rather than the registry's `mm_id`: mm_id is a filter, and every
+ * existing link and embed URL means it that way. A selection composes with
+ * filters instead of replacing them, so whatever else the URL carries — filters,
+ * position, zoom — is left alone.
+ *
+ * replaceState, not pushState: the address bar tracks what is on screen, and
+ * looking at a dozen units on the way somewhere should not leave a dozen entries
+ * for the back button to walk out through.
+ */
+function setUnitInUrl(mmId) {
+    /* An iframe's own URL is not shareable, and rewriting it would be invisible */
+    if (MapsConfig.embed) return;
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('unit') === String(mmId)) return;
+    params.set('unit', mmId);
+    replaceUrlParams(params);
+}
+
+function clearUnitInUrl() {
+    if (MapsConfig.embed) return;
+    var params = new URLSearchParams(window.location.search);
+    if (!params.has('unit')) return;
+    params.delete('unit');
+    replaceUrlParams(params);
+}
+
+function replaceUrlParams(params) {
+    var query = params.toString();
+    /* The current path, rather than a rebuilt one: whether the visitor arrived
+       at main.html or at the directory index is their business. */
+    window.history.replaceState({}, document.title,
+        window.location.pathname + (query ? '?' + query : ''));
 }
 
 //---------------------General functions---------------------
@@ -137,8 +183,7 @@ function onEachFeature(feature,layer) {
     if (feature.properties) {
         layer.on({
             click: function() {
-                var APIEndpoint = MapsConfig.baseMMUrl + 'units?mm_id=' + feature.properties.mmId;
-                return onUnitClick(APIEndpoint, {
+                return onUnitClick(feature.properties.mmId, {
                     name: feature.properties.name,
                     lat: feature.geometry.coordinates[1],
                     lng: feature.geometry.coordinates[0]
@@ -162,6 +207,10 @@ function showUnitLoading(preview) {
     if (!title || !info) return;
 
     title.textContent = (preview && preview.name) ? preview.name : 'Φόρτωση…';
+
+    /* A new selection, so any "link copied" message from the last one is stale */
+    var note = document.getElementById('unit-share-note');
+    if (note) note.hidden = true;
 
     var loading = document.createElement('p');
     loading.className = 'unit-loading';
@@ -191,10 +240,12 @@ function showUnitError() {
     info.replaceChildren(message);
 }
 
-function onUnitClick(APIEndpoint, preview) {
+function onUnitClick(mmId, preview) {
+    selectedUnit = { mmId: mmId, name: (preview && preview.name) || '' };
+    setUnitInUrl(mmId);
     showUnitLoading(preview);
 
-    fetch(APIEndpoint)
+    fetch(MapsConfig.baseMMUrl + 'units?mm_id=' + encodeURIComponent(mmId))
         .then(function (response) { return response.json(); })
         .then(function (results) {
             if (!results || !results.data || !results.data[0]) {
@@ -295,6 +346,7 @@ function showUnitModal(unitData, sites) {
         ) + ' σε ευθεία γραμμή'));
     }
 
+    selectedUnit = { mmId: unitData.mm_id, name: unitData.name };
     document.getElementById('feature-title').textContent = unitData.name;
     var info = document.getElementById('feature-info');
     info.replaceChildren(table);
@@ -331,6 +383,8 @@ function closeUnitPanel() {
     if (!panel || panel.hidden) return;
     panel.classList.remove('is-open');
     panel.hidden = true;
+    selectedUnit = null;
+    clearUnitInUrl();
     clearHighlight();
 }
 

@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
     body.addEventListener('click', function (event) {
         var row = event.target.closest('.feature-row');
         if (!row) return;
-        onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + row.dataset.mmId, {
+        onUnitClick(row.dataset.mmId, {
             name: row.dataset.name,
             lat: row.dataset.lat,
             lng: row.dataset.lng
@@ -404,6 +404,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);
+    document.getElementById('unit-panel-share').addEventListener('click', shareUnit);
 
     /* Escape closes the details panel, matching the dialogs' behaviour */
     document.addEventListener('keydown', function (event) {
@@ -415,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /* Search-as-you-type: picking a suggestion goes straight to that unit */
     MapsSearch({
         onPick: function (item) {
-            onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + item.mmId, item);
+            onUnitClick(item.mmId, item);
         }
     });
 
@@ -433,12 +434,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //-----------------------------Show markers to map---------------------------
     var initialQuery = urlParams.urlValues.join('&');
+    var sharedUnit = urlParams.unit;
 
-    /* Start narrowed to the rail, so the map leads. A link carrying filters is
-       the exception: 87% of real visits arrive that way, and they arrive to see
-       results -- landing them on a bare rail would hide the very thing the link
-       was shared for. */
-    setPanelCollapsed(initialQuery === '');
+    /* Start narrowed to the rail, so the map leads. A link carrying filters or a
+       unit is the exception: 87% of real visits arrive that way, and they arrive
+       to see results -- landing them on a bare rail would hide the very thing
+       the link was shared for. */
+    setPanelCollapsed(initialQuery === '' && sharedUnit === '');
 
     if (initialQuery === '') {
         loadUnits('', false);
@@ -447,13 +449,21 @@ document.addEventListener('DOMContentLoaded', function () {
            for visitors who have already granted the permission. A cold prompt
            on load is not worth what it costs; anyone who has never been asked
            gets the hint below instead. */
-        MapsNearby.locateIfPermitted(locateOptions);
-        maybeShowGeoHint();
+        if (sharedUnit === '') {
+            MapsNearby.locateIfPermitted(locateOptions);
+            maybeShowGeoHint();
+        }
     } else {
         body.replaceChildren();
         resetUnitsLayer();
         map.setView([urlParams.lat, urlParams.lng], urlParams.zoom);
         loadUnits(initialQuery, true);
+    }
+
+    /* A link to a particular unit opens its card, without waiting for the
+       379 KB of points: the two requests run alongside each other. */
+    if (sharedUnit !== '') {
+        onUnitClick(sharedUnit, null);
     }
 });
 
@@ -466,12 +476,20 @@ if (MapsConfig.embed) {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') closeUnitPanel();
         });
+        /* An embed can be pointed at one unit's card too, which is how a school
+           site shows its own entry */
+        if (urlParams.unit !== '') {
+            onUnitClick(urlParams.unit, null);
+        }
     });
     loadUnits(urlParams.urlValues.join('&'), false);
 }
 
 function applyFilters() {
     clearHighlight();
+    /* A new search is not the old unit's card, and the URL is about to lose the
+       selection anyway */
+    closeUnitPanel();
     window.history.pushState({}, document.title, MapsConfig.baseNewUrl);
     showSpinner();
 
@@ -588,6 +606,44 @@ function shareField(label, value) {
     wrapper.appendChild(caption);
     wrapper.appendChild(button);
     return wrapper;
+}
+
+/**
+ * Hands out a link to the open unit.
+ *
+ * The address bar already carries it, but nobody selects a URL out of the
+ * address bar on a phone -- and two thirds of the traffic is phones. So: the
+ * device's own share sheet where there is one, a copied link where there is not.
+ */
+function shareUnit() {
+    if (!selectedUnit) return;
+    var url = MapsConfig.baseHrefUrl + '?unit=' + encodeURIComponent(selectedUnit.mmId);
+
+    /* A pointer that cannot hover is the honest test for "this is a phone".
+       navigator.share on its own is also true in desktop Chrome, where a copied
+       link is the more useful answer. */
+    if (navigator.share && window.matchMedia('(hover: none)').matches) {
+        navigator.share({ title: selectedUnit.name || document.title, url: url })
+            .catch(function () { /* dismissing the sheet is not a failure */ });
+        return;
+    }
+
+    copyText(url).then(function (ok) {
+        showShareNote(ok
+            ? 'Ο σύνδεσμος αντιγράφηκε'
+            : 'Δεν ήταν δυνατή η αντιγραφή του συνδέσμου.');
+    });
+}
+
+var shareNoteTimer = null;
+
+function showShareNote(message) {
+    var note = document.getElementById('unit-share-note');
+    if (!note) return;
+    note.textContent = message;
+    note.hidden = false;
+    if (shareNoteTimer) window.clearTimeout(shareNoteTimer);
+    shareNoteTimer = window.setTimeout(function () { note.hidden = true; }, 3000);
 }
 
 /* navigator.clipboard needs a secure context, so keep a fallback for plain
