@@ -205,6 +205,19 @@
         </button>
       </div>
 
+      <!-- Shown only while the map is waiting to be pointed at. A mode needs to
+           say so: a crosshair alone does not explain what the next click does. -->
+      <div class="pick-hint" id="pick-hint" data-testid="pick-hint" role="status" hidden>
+        <span class="pick-hint-text">
+          <svg class="icon" aria-hidden="true"><use href="#i-pin"></use></svg>
+          Πατήστε στον χάρτη για κοντινές μονάδες
+        </span>
+        <button type="button" class="pick-hint-close" id="pick-hint-close" title="Άκυρο">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+          <span class="sr-only">Άκυρο</span>
+        </button>
+      </div>
+
       <!-- One-time nudge toward the locate control, for a visitor who has never
            been asked. Not a modal and not a prompt on load: it points at the
            control, and pressing it is what fires the browser's request, which
@@ -241,6 +254,7 @@
           <li>Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
           <li>Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
           <li>Διαμοιρασμός συνδέσμου προς συγκεκριμένη Μονάδα (εικονίδιο κοινοποίησης στην καρτέλα της)</li>
+          <li>Εύρεση των κοντινότερων Μονάδων, είτε από τη θέση σας είτε από οποιοδήποτε σημείο του χάρτη επιλέξετε</li>
           <li>Δυνατότητα διαμοιρασμού του Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Συνδέσμου»)</li>
           <li>Δυνατότητα χρήσης του Χάρτη ως embed με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Iframe»)</li>
         </ul>

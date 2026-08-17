@@ -924,8 +924,9 @@ a { color: var(--brand); }
 
 /* ------------------------------------------------------------- proximity */
 
-/* Leaflet's own control chrome, so it sits with the zoom buttons */
-.locate-control button {
+/* Leaflet's own control chrome, so they sit with the zoom buttons */
+.locate-control button,
+.point-control button {
     display: block;
     width: 30px;
     height: 30px;
@@ -935,8 +936,10 @@ a { color: var(--brand); }
     color: #333;
     cursor: pointer;
 }
-.locate-control button:hover { background: #f4f4f4; }
-.locate-control .icon { width: 17px; height: 17px; vertical-align: -3px; }
+.locate-control button:hover,
+.point-control button:hover { background: #f4f4f4; }
+.locate-control .icon,
+.point-control .icon { width: 17px; height: 17px; vertical-align: -3px; }
 
 .locate-control button.is-busy { color: var(--brand); }
 .locate-control button.is-busy .icon { animation: spinner-spin 1.1s linear infinite; }
@@ -956,6 +959,67 @@ a { color: var(--brand); }
  * Sits above the locate control and points at it. Appears only for a visitor
  * whose permission has never been decided, and remembers being dismissed.
  */
+/* --------------------------------------------------- pick a point on the map */
+
+/* Top centre, out of the way of both the sidebar and the controls at the foot,
+   and high enough up the stack to be read wherever it lands. */
+.pick-hint {
+    position: absolute;
+    z-index: 1300;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: stretch;
+    max-width: calc(100% - 24px);
+    background: var(--bg);
+    border-radius: 8px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+}
+.pick-hint[hidden] { display: none; }
+
+.pick-hint-text {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 10px 9px 12px;
+    font-size: 12.5px;
+    color: var(--ink);
+}
+.pick-hint-text .icon { flex: none; color: var(--brand); }
+
+.pick-hint-close {
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0 8px 8px 0;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+.pick-hint-close:hover { background: var(--bg-soft); color: var(--ink); }
+.pick-hint-close .icon { width: 13px; height: 13px; }
+
+/* The mode, said twice: the cursor while over the map, and the control staying
+   pressed so it is clear where to call it off. */
+#container.is-picking .leaflet-container { cursor: crosshair; }
+#container.is-picking .leaflet-marker-icon { cursor: crosshair; }
+
+.point-control button.is-active {
+    background: var(--brand);
+    color: #fff;
+}
+
+/* Leaflet gives a DivIcon a white background and a border by default */
+.chosen-pin {
+    background: none;
+    border: 0;
+    line-height: 0;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+
 .geo-hint {
     position: absolute;
     z-index: 1150;

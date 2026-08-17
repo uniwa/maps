@@ -29,8 +29,12 @@ var filterControls = {};
    what "nearest" means, so on a filtered view it is the nearest match. */
 var loadedFeatures = [];
 
-/* Where the visitor is, once they have asked. null until then. */
+/* The point distances are measured from, once there is one: either where the
+   visitor is or a spot they pointed at (`chosen`). null until then. */
 var located = null;
+
+/* Waiting for a click on the map to say which point that should be */
+var picking = false;
 
 /* A location that arrived before the units did, to be answered once they land */
 var pendingNearest = null;
@@ -185,9 +189,10 @@ function loadUnits(query, renderList) {
             markerClusters.addLayer(units);
             hideSpinner();
 
-            /* A location that was waiting for these */
+            /* A point of reference that was waiting for these */
             if (pendingNearest) {
-                showNearest(pendingNearest.lat, pendingNearest.lng, pendingNearest.accuracy);
+                showNearest(pendingNearest.lat, pendingNearest.lng,
+                            pendingNearest.accuracy, { chosen: pendingNearest.chosen });
             }
         })
         .catch(function (err) {
@@ -255,33 +260,52 @@ var locateOptions = {
 
 if (!MapsConfig.embed) {
     MapsNearby.locateControl(locateOptions).addTo(map);
+    /* Added after, so it lands above the locate button: Leaflet fills the bottom
+       corners upwards. */
+    MapsNearby.pointControl({ onToggle: function () { setPicking(!picking); } }).addTo(map);
 }
 
 /**
- * Marks the visitor's position and lists the closest units to it.
+ * Marks a point of reference and lists the closest units to it.
+ *
+ * The point is either where the visitor is or somewhere they pointed at; the
+ * only difference downstream is what is drawn there and what the list is called.
  *
  * "Closest" means closest among the units currently loaded, so with a filter
  * applied it answers "the nearest ΓΥΜΝΑΣΙΟ" rather than the nearest anything.
  */
-function showNearest(lat, lng, accuracy) {
-    located = { lat: lat, lng: lng };
+function showNearest(lat, lng, accuracy, options) {
+    var chosen = !!(options && options.chosen);
+    located = { lat: lat, lng: lng, chosen: chosen };
 
     youAreHere.clearLayers();
-    L.circleMarker([lat, lng], {
-        radius: 7,
-        color: '#fff',
-        weight: 2,
-        fillColor: '#1a73e8',
-        fillOpacity: 1
-    }).addTo(youAreHere);
-    if (accuracy && accuracy > 40) {
-        L.circle([lat, lng], {
-            radius: accuracy,
-            color: '#1a73e8',
-            weight: 1,
+    if (chosen) {
+        var marker = MapsNearby.pointMarker(lat, lng).addTo(youAreHere);
+        /* The first click is rarely the exact spot meant */
+        marker.on('dragend', function () {
+            var moved = marker.getLatLng();
+            placeChosenPoint(moved.lat, moved.lng);
+        });
+    } else {
+        /* The two origins are alternatives, so arriving at one leaves the
+           other's link behind. */
+        clearUrlParam('near');
+        L.circleMarker([lat, lng], {
+            radius: 7,
+            color: '#fff',
+            weight: 2,
             fillColor: '#1a73e8',
-            fillOpacity: 0.1
+            fillOpacity: 1
         }).addTo(youAreHere);
+        if (accuracy && accuracy > 40) {
+            L.circle([lat, lng], {
+                radius: accuracy,
+                color: '#1a73e8',
+                weight: 1,
+                fillColor: '#1a73e8',
+                fillOpacity: 0.1
+            }).addTo(youAreHere);
+        }
     }
 
     var info = document.getElementById('units_info');
@@ -291,7 +315,7 @@ function showNearest(lat, lng, accuracy) {
        is instant, the 379 KB of units is not -- so hold the position and answer
        it once they land, rather than reporting nothing nearby. */
     if (loadedFeatures.length === 0) {
-        pendingNearest = { lat: lat, lng: lng, accuracy: accuracy };
+        pendingNearest = { lat: lat, lng: lng, accuracy: accuracy, chosen: chosen };
         info.textContent = 'Αναζήτηση κοντινών μονάδων…';
         return;
     }
@@ -303,12 +327,14 @@ function showNearest(lat, lng, accuracy) {
         return;
     }
 
-    /* Deliberately not expanding the sidebar: the visitor asked where they were,
-       not for the panel to be opened over the map they were looking at. The map
-       moving to their area is the acknowledgement; a dot on the rail says the
+    /* Deliberately not expanding the sidebar: the visitor asked what was near a
+       place, not for the panel to be opened over the map they were looking at.
+       The map moving there is the acknowledgement; a dot on the tab says the
        list is ready when they want it. */
     markRailNews();
-    info.textContent = 'Κοντινότερες μονάδες στη θέση σας';
+    info.textContent = chosen
+        ? 'Κοντινότερες μονάδες στο επιλεγμένο σημείο'
+        : 'Κοντινότερες μονάδες στη θέση σας';
 
     body.replaceChildren();
     var fragment = document.createDocumentFragment();
@@ -410,11 +436,19 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);
     document.getElementById('unit-panel-share').addEventListener('click', shareUnit);
 
-    /* Escape closes the details panel, matching the dialogs' behaviour */
+    document.getElementById('pick-hint-close').addEventListener('click', function () {
+        setPicking(false);
+    });
+
+    /* Escape closes the details panel, matching the dialogs' behaviour -- or
+       calls off a pending point first, since that is the newer commitment */
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            closeUnitPanel();
+        if (event.key !== 'Escape') return;
+        if (picking) {
+            setPicking(false);
+            return;
         }
+        closeUnitPanel();
     });
 
     /* Search-as-you-type: picking a suggestion goes straight to that unit */
@@ -439,12 +473,20 @@ document.addEventListener('DOMContentLoaded', function () {
     //-----------------------------Show markers to map---------------------------
     var initialQuery = urlParams.urlValues.join('&');
     var sharedUnit = urlParams.unit;
+    var sharedPoint = parseLatLng(urlParams.near);
 
-    /* Start narrowed to the rail, so the map leads. A link carrying filters or a
-       unit is the exception: 87% of real visits arrive that way, and they arrive
-       to see results -- landing them on a bare rail would hide the very thing
-       the link was shared for. */
-    setPanelCollapsed(initialQuery === '' && sharedUnit === '');
+    /* Start narrowed to the rail, so the map leads. A link carrying filters, a
+       unit or a point is the exception: 87% of real visits arrive that way, and
+       they arrive to see results -- landing them on a bare rail would hide the
+       very thing the link was shared for. */
+    setPanelCollapsed(initialQuery === '' && sharedUnit === '' && !sharedPoint);
+
+    /* Answered once the units land, which is what pendingNearest is for */
+    if (sharedPoint) {
+        pendingNearest = {
+            lat: sharedPoint.lat, lng: sharedPoint.lng, accuracy: null, chosen: true
+        };
+    }
 
     if (initialQuery === '') {
         loadUnits('', false);
@@ -453,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
            for visitors who have already granted the permission. A cold prompt
            on load is not worth what it costs; anyone who has never been asked
            gets the hint below instead. */
-        if (sharedUnit === '') {
+        if (sharedUnit === '' && !sharedPoint) {
             MapsNearby.locateIfPermitted(locateOptions);
             maybeShowGeoHint();
         }
@@ -518,6 +560,50 @@ function markRailNews() {
     }
 }
 
+/**
+ * Arms or disarms "pick a point": the map takes a crosshair, and a bubble says
+ * what the next click will do.
+ *
+ * A mode rather than a modifier click, because both obvious modifiers are taken
+ * -- a plain click puts the sidebar away, and the right button is the share
+ * popup that every embed on blogs.sch.gr was made with.
+ */
+function setPicking(on) {
+    picking = on;
+
+    var container = document.getElementById('container');
+    if (container) container.classList.toggle('is-picking', on);
+
+    /* There has to be a map to point at. On a phone the open sidebar leaves a
+       48px strip of it, so arming the mode puts the sidebar away -- measured
+       rather than assumed from the screen width, since what matters is how much
+       of the map is actually covered. */
+    var panel = document.getElementById('panel');
+    if (on && container && panel && !container.classList.contains('panel-collapsed') &&
+        panel.getBoundingClientRect().width > container.getBoundingClientRect().width * 0.45) {
+        setPanelCollapsed(true);
+    }
+
+    var button = document.getElementById('point-btn');
+    if (button) {
+        button.classList.toggle('is-active', on);
+        button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    var hint = document.getElementById('pick-hint');
+    if (hint) hint.hidden = !on;
+}
+
+/**
+ * Answers "what is near here" for a point the visitor chose, and puts that point
+ * in the address bar so the answer can be sent to someone else.
+ */
+function placeChosenPoint(lat, lng) {
+    setPicking(false);
+    setUrlParam('near', lat.toFixed(6) + ',' + lng.toFixed(6));
+    showNearest(lat, lng, null, { chosen: true });
+}
+
 var GEO_HINT_KEY = 'maps.geoHint.dismissed';
 
 /**
@@ -569,7 +655,12 @@ function dismissGeoHint(remember) {
  * it. One tap, not two: needing a second one to finish the job was worse than
  * the small collapse tab it was meant to make up for.
  */
-map.on("click", function () {
+map.on("click", function (event) {
+    /* Unless a point was asked for, in which case this click is the answer */
+    if (picking) {
+        placeChosenPoint(event.latlng.lat, event.latlng.lng);
+        return;
+    }
     highlight.clearLayers();
     if (!MapsConfig.embed) {
         setPanelCollapsed(true);

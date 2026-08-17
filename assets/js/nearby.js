@@ -89,6 +89,60 @@ var MapsNearby = (function () {
         return control;
     }
 
+    /**
+     * A control that turns the next click on the map into a point of reference,
+     * so "what is near here" can be asked about anywhere -- a house being looked
+     * at, a village someone is moving to -- and not only about where the visitor
+     * happens to be standing.
+     *
+     * It only toggles a mode; the map click and everything downstream of it
+     * belong to the caller, which is where the loaded units live.
+     */
+    function pointControl(options) {
+        var control = L.control({ position: options.position || 'bottomright' });
+
+        control.onAdd = function () {
+            var wrapper = L.DomUtil.create('div', 'leaflet-bar leaflet-control point-control');
+            var button = L.DomUtil.create('button', '', wrapper);
+            button.type = 'button';
+            button.id = 'point-btn';
+            button.title = 'Μονάδες κοντά σε σημείο';
+            button.setAttribute('aria-label', 'Μονάδες κοντά σε σημείο');
+            button.setAttribute('aria-pressed', 'false');
+            button.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-pin"></use></svg>';
+
+            L.DomEvent.disableClickPropagation(wrapper);
+            L.DomEvent.on(button, 'click', function () { options.onToggle(); });
+            return wrapper;
+        };
+
+        return control;
+    }
+
+    /**
+     * The marker for a point the visitor chose. Draggable, because the first
+     * click is rarely exactly the spot meant, and drawn inline rather than from
+     * the icon sheet so the teardrop can be filled -- a <use> reference cannot
+     * be styled piece by piece.
+     */
+    function pointMarker(lat, lng) {
+        return L.marker([lat, lng], {
+            draggable: true,
+            keyboard: false,
+            zIndexOffset: 1000,
+            title: 'Επιλεγμένο σημείο — σύρετέ το για αλλαγή',
+            icon: L.divIcon({
+                className: 'chosen-pin',
+                iconSize: [30, 30],
+                iconAnchor: [15, 29],
+                html: '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">' +
+                      '<path d="M12 22.5S19.5 14.4 19.5 9a7.5 7.5 0 10-15 0c0 5.4 7.5 13.5 7.5 13.5z"' +
+                      ' fill="#d93025" stroke="#fff" stroke-width="1.6"/>' +
+                      '<circle cx="12" cy="9" r="2.8" fill="#fff"/></svg>'
+            })
+        });
+    }
+
     function locate(button, options) {
         if (!navigator.geolocation) {
             options.onError('Ο φυλλομετρητής δεν υποστηρίζει γεωεντοπισμό.');
@@ -145,6 +199,8 @@ var MapsNearby = (function () {
         format: format,
         nearest: nearest,
         locateControl: locateControl,
+        pointControl: pointControl,
+        pointMarker: pointMarker,
         locateIfPermitted: locateIfPermitted
     };
 })();

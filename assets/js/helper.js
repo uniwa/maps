@@ -62,9 +62,11 @@ function getUrlParams()
     return {
         urlValues: arrValues,
         searchValues: searchValues,
-        /* The open unit. Deliberately not part of urlValues: it is a selection,
-           not a filter, so it is never sent to the registry. */
+        /* The open unit, and the point to measure from. Deliberately not part of
+           urlValues: they are a selection and a place, not filters, so neither
+           is ever sent to the registry. */
         unit: getUrlParam('unit', ''),
+        near: getUrlParam('near', ''),
         zoom: getUrlParam('zoom', MapsConfig.zoomGR),
         lat: getUrlParam('lat', MapsConfig.latGR),
         lng: getUrlParam('lng', MapsConfig.lngGR)
@@ -89,25 +91,46 @@ var selectedUnit = null;
  * looking at a dozen units on the way somewhere should not leave a dozen entries
  * for the back button to walk out through.
  */
-function setUnitInUrl(mmId) {
+function setUrlParam(name, value) {
     /* An iframe's own URL is not shareable, and rewriting it would be invisible */
     if (MapsConfig.embed) return;
     var params = new URLSearchParams(window.location.search);
-    if (params.get('unit') === String(mmId)) return;
-    params.set('unit', mmId);
+    if (params.get(name) === String(value)) return;
+    params.set(name, value);
     replaceUrlParams(params);
 }
 
-function clearUnitInUrl() {
+function clearUrlParam(name) {
     if (MapsConfig.embed) return;
     var params = new URLSearchParams(window.location.search);
-    if (!params.has('unit')) return;
-    params.delete('unit');
+    if (!params.has(name)) return;
+    params.delete(name);
     replaceUrlParams(params);
+}
+
+function setUnitInUrl(mmId) { setUrlParam('unit', mmId); }
+function clearUnitInUrl() { clearUrlParam('unit'); }
+
+/**
+ * Reads a "lat,lng" URL value, or null if it is not a plausible position.
+ * A malformed one is ignored rather than sending the map to the Gulf of Guinea.
+ */
+function parseLatLng(value) {
+    if (!value) return null;
+    var parts = String(value).split(',');
+    if (parts.length !== 2) return null;
+    var lat = parseFloat(parts[0]);
+    var lng = parseFloat(parts[1]);
+    if (!isFinite(lat) || !isFinite(lng)) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat: lat, lng: lng };
 }
 
 function replaceUrlParams(params) {
-    var query = params.toString();
+    /* A bare comma, which URLSearchParams escapes: it is legal in a query value,
+       it is what this app's own multi-value filters use (unit_type=3,4), and
+       "near=38.959409%2C27.938232" is a worse thing to hand someone. */
+    var query = params.toString().replace(/%2C/g, ',');
     /* The current path, rather than a rebuilt one: whether the visitor arrived
        at main.html or at the directory index is their business. */
     window.history.replaceState({}, document.title,
