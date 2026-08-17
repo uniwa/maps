@@ -69,11 +69,21 @@ function getUrlParams()
 }
 
 //---------------------General functions---------------------
+/** Expands the sidebar if it is currently narrowed to the rail. */
+function expandPanel()
+{
+    var container = document.getElementById('container');
+    if (container && container.classList.contains('panel-collapsed')) {
+        togglePanel();
+    }
+}
+
 /**
- * Slides the sidebar out of the way, and back.
+ * Narrows the sidebar to its icon rail, and back.
  *
- * The state lives on the container, because the tab that reverses it travels
- * with the sidebar and the brand mark that replaces it does not.
+ * The state lives on the container so both the rail and the tab can respond to
+ * it. Collapsing leaves the rail behind rather than hiding the sidebar: there is
+ * always something on screen identifying the service and offering a way back.
  */
 function togglePanel()
 {
@@ -85,8 +95,8 @@ function togglePanel()
     if (toggle) {
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         toggle.querySelector('.sr-only').textContent = collapsed
-            ? 'Εμφάνιση πλαϊνής στήλης'
-            : 'Απόκρυψη πλαϊνής στήλης';
+            ? 'Άνοιγμα πλαϊνής στήλης'
+            : 'Σύμπτυξη πλαϊνής στήλης';
     }
     if (typeof map !== 'undefined' && map) {
         map.invalidateSize();

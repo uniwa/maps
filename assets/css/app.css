@@ -14,7 +14,10 @@
     --line: #d6dbe0;
     --bg: #fff;
     --bg-soft: #f4f6f8;
-    --panel-w: 360px;
+    /* The sidebar is exactly as wide as the banner, and the rail exactly as
+       wide as the square mark, so both sit flush. */
+    --panel-w: 260px;
+    --rail-w: 59px;
     --focus: #0b6ba8;
 }
 
@@ -115,11 +118,47 @@ a { color: var(--brand); }
     flex-direction: column;
     background: var(--bg);
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.16);
-    transform: translateX(0);
-    transition: transform 0.22s ease;
+    transition: width 0.2s ease;
 }
 
-#container.panel-collapsed .panel { transform: translateX(-100%); }
+/* Collapsed, the sidebar narrows to the rail rather than leaving the screen */
+#container.panel-collapsed .panel { width: var(--rail-w); }
+#container.panel-collapsed .panel-full { display: none; }
+#container.panel-collapsed .panel-rail { display: flex; }
+
+.panel-full {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-rail {
+    display: none;
+    flex: none;
+    width: var(--rail-w);
+    flex-direction: column;
+    align-items: center;
+}
+
+.rail-brand { display: block; line-height: 0; }
+.rail-brand img { display: block; }
+
+.rail-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--rail-w);
+    height: 46px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+.rail-btn:hover { background: var(--bg-soft); color: var(--ink); }
+.rail-btn .icon { width: 20px; height: 20px; }
 
 /* The tab hangs off the sidebar's right edge, so when the sidebar slides out
    the tab ends up against the viewport edge, still visible and still the way
@@ -145,20 +184,7 @@ a { color: var(--brand); }
 #container.panel-collapsed .panel-tab .icon { transform: rotate(180deg); }
 
 /* Identity while the sidebar is away */
-.brand-mini {
-    position: absolute;
-    z-index: 1050;
-    top: 12px;
-    left: 40px;
-    display: none;
-    padding: 4px;
-    background: var(--bg);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    line-height: 0;
-}
-.brand-mini img { display: block; border-radius: 5px; }
-#container.panel-collapsed .brand-mini { display: block; }
+
 
 .panel-bar {
     flex: none;
@@ -168,14 +194,11 @@ a { color: var(--brand); }
     padding: 8px;
 }
 
-/* Both marks are used at their native size; scaling the banner down was what
-   made it look muddy. */
-.panel-brand {
-    flex: none;
-    padding: 10px 12px 0;
-}
-.panel-brand a { display: inline-block; line-height: 0; }
-.panel-brand img { display: block; max-width: 100%; height: auto; }
+/* Flush, and at native size: scaling the banner down was what made it look
+   muddy, and padding around it made the sidebar wider than the artwork. */
+.panel-brand { flex: none; }
+.panel-brand a { display: block; line-height: 0; }
+.panel-brand img { display: block; width: 100%; height: auto; }
 
 
 
@@ -446,8 +469,6 @@ a { color: var(--brand); }
     /* Full width less the tab strip, so the tab that closes the sidebar is
        still on screen while it is open. */
     .panel { width: calc(100% - 26px); }
-
-    .brand-mini { left: 34px; }
 }
 
 /* --------------------------------------------------------------- spinner */
@@ -811,3 +832,21 @@ a { color: var(--brand); }
     .unit-panel,
     .panel { transition: none; }
 }
+
+/* The sidebar is only as wide as the banner, so the search row gets all of it
+   and the menu button lives inside the search pill rather than beside it. */
+.search-box { padding: 8px; }
+.panel-bar { padding: 0; }
+
+.search-input { padding-right: 2px; }
+
+.panel-menu > summary {
+    /* 34px, not smaller: below ~32 it stops being a reliable touch target */
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+}
+.panel-menu > summary .icon { width: 18px; height: 18px; }
+
+/* Anchored to the sidebar rather than the pill, so it is not clipped */
+.panel-menu-list { right: -4px; min-width: 224px; }

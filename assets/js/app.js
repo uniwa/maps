@@ -257,6 +257,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('panel-collapse').addEventListener('click', togglePanel);
 
+    /* The rail's icons expand the sidebar and go straight to the thing they
+       stand for, rather than only expanding it and leaving you to look. */
+    document.getElementById('rail-search').addEventListener('click', function () {
+        expandPanel();
+        document.getElementById('search_name').focus();
+    });
+    document.getElementById('rail-filters').addEventListener('click', function () {
+        expandPanel();
+        document.getElementById('advanced-filters').open = true;
+    });
+    document.getElementById('rail-menu').addEventListener('click', function () {
+        expandPanel();
+        document.getElementById('panel-menu').open = true;
+    });
+
     /* The menu is a <details>; close it once it has done its job */
     var menu = document.getElementById('panel-menu');
     document.getElementById('about-btn').addEventListener('click', function () {
