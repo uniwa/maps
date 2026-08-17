@@ -781,22 +781,34 @@ a { color: var(--brand); }
     overflow-y: auto;
 }
 
-@media (min-width: 900px) {
-    /* A floating card in the same place as the search panel, so details and
-       search share one location rather than competing for attention. */
-    .unit-panel {
-        top: 12px;
-        left: 12px;
-        right: auto;
-        bottom: auto;
-        width: var(--panel-w);
-        max-height: calc(100% - 24px);
-        border: 0;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 8px 28px rgba(0, 0, 0, 0.18);
-        transform: translateX(calc(-100% - 16px));
-    }
-    .unit-panel.is-open { transform: translateX(0); }
+/**
+ * Inside the sidebar, details cover its content rather than sliding up from the
+ * bottom of the map. One surface for search, results and details — and nothing
+ * overlapping the map, so the view never has to be shifted to compensate.
+ *
+ * The base rules above still apply to the embed, which has no sidebar and where
+ * a sheet is the right shape for a small iframe.
+ */
+.panel .unit-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: auto;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    animation: details-appear 0.16s ease-out both;
+}
+
+@keyframes details-appear {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panel .unit-panel { animation-duration: 0.01s; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -967,4 +979,18 @@ a { color: var(--brand); }
 @media (max-width: 899px) {
     /* Clear of the attribution line, which wraps on a narrow screen */
     .geo-hint { bottom: 142px; }
+}
+
+/* A quiet mark that something arrived while the sidebar was narrowed */
+.rail-btn.has-news { position: relative; }
+.rail-btn.has-news::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    right: 11px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    background: var(--brand);
 }

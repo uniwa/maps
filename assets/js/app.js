@@ -302,7 +302,11 @@ function showNearest(lat, lng, accuracy) {
         return;
     }
 
-    expandPanel();
+    /* Deliberately not expanding the sidebar: the visitor asked where they were,
+       not for the panel to be opened over the map they were looking at. The map
+       moving to their area is the acknowledgement; a dot on the rail says the
+       list is ready when they want it. */
+    markRailNews();
     info.textContent = 'Κοντινότερες μονάδες στη θέση σας';
 
     body.replaceChildren();
@@ -478,6 +482,20 @@ function applyFilters() {
     loadUnits(collectFilters(false), true);
 }
 
+/**
+ * Flags the rail's search icon when results have arrived while the sidebar is
+ * narrowed, so something changed silently rather than being thrown in the way.
+ * Cleared as soon as the sidebar is opened.
+ */
+function markRailNews() {
+    var container = document.getElementById('container');
+    var button = document.getElementById('rail-search');
+    if (!container || !button) return;
+    if (container.classList.contains('panel-collapsed')) {
+        button.classList.add('has-news');
+    }
+}
+
 var GEO_HINT_KEY = 'maps.geoHint.dismissed';
 
 /**
@@ -524,9 +542,21 @@ function dismissGeoHint(remember) {
     }
 }
 
-//Clear feature highlight when map is clicked
-map.on("click", function() {
+/**
+ * A click on open map is a way out of whatever is open: first the details, then
+ * the sidebar itself. The collapse tab is deliberately small, and on a touch
+ * screen a 18px target is hard to hit, so the whole map doubles as one.
+ */
+map.on("click", function () {
     highlight.clearLayers();
+    if (MapsConfig.embed) return;
+
+    var details = document.getElementById('unit-panel');
+    if (details && !details.hidden) {
+        closeUnitPanel();
+    } else {
+        setPanelCollapsed(true);
+    }
 });
 
 /**

@@ -168,6 +168,21 @@
         </form>
         </div>
 
+        <!-- Unit details, inside the sidebar rather than a separate drawer: one
+             surface for everything, and nothing overlapping the map that the
+             view then has to be shifted around. -->
+        <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
+                 aria-labelledby="feature-title" hidden>
+          <header class="unit-panel-head">
+            <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
+            <button type="button" class="icon-btn" id="unit-panel-close">
+              <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+              <span class="sr-only">Κλείσιμο</span>
+            </button>
+          </header>
+          <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
+        </section>
+
         <!-- Attached to the sidebar's edge, so it travels with it: when the
              sidebar slides out, the tab is left sitting against the viewport
              edge and is still the way back. -->
@@ -193,20 +208,6 @@
         </button>
       </div>
 
-      <!-- Unit details. A panel rather than a modal, so the map stays visible
-           and the selected pin keeps its context: a side card on a wide screen,
-           a bottom sheet on a narrow one. -->
-      <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
-               aria-labelledby="feature-title" hidden>
-        <header class="unit-panel-head">
-          <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
-          <button type="button" class="icon-btn" id="unit-panel-close">
-            <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
-            <span class="sr-only">Κλείσιμο</span>
-          </button>
-        </header>
-        <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
-      </section>
     </div>
 
     <dialog class="modal modal-lg" id="aboutModal" aria-labelledby="aboutModal-title">

@@ -83,6 +83,12 @@ function setPanelCollapsed(collapsed)
     if (!container) return;
 
     container.classList.toggle('panel-collapsed', collapsed);
+
+    /* Opening the sidebar is seeing whatever the dot was about */
+    if (!collapsed) {
+        var news = document.getElementById('rail-search');
+        if (news) news.classList.remove('has-news');
+    }
     if (toggle) {
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         toggle.querySelector('.sr-only').textContent = collapsed
@@ -245,15 +251,7 @@ function showUnitModal(unitData, sites) {
     highlight.clearLayers().addLayer(
         L.circleMarker([latitude, longitude], highlightStyle)
     );
-    keepUnitInView();
 
-    /* On a phone the sidebar fills the screen, so get it out of the way when
-       the details sheet opens. */
-    var container = document.getElementById('container');
-    if (container && !window.matchMedia('(min-width: 900px)').matches &&
-        !container.classList.contains('panel-collapsed')) {
-        togglePanel();
-    }
 }
 
 /**
@@ -264,33 +262,14 @@ function showUnitModal(unitData, sites) {
 function openUnitPanel() {
     var panel = document.getElementById('unit-panel');
     if (!panel) return;
+    /* The details are the sidebar's content now, so it has to be open */
+    if (typeof expandPanel === 'function') expandPanel();
     panel.hidden = false;
     /* Next frame, so the transition runs from the off-screen position */
     window.requestAnimationFrame(function () {
         panel.classList.add('is-open');
     });
     document.getElementById('feature-title').focus();
-}
-
-/**
- * setView centres the unit in the map container, but part of that container is
- * behind the details panel: a sheet across the bottom on a phone, a column down
- * the left on a wide screen. Shift the view so the pin lands in what is
- * actually visible, the way map apps do when a card opens.
- */
-function keepUnitInView() {
-    var panel = document.getElementById('unit-panel');
-    if (!panel || panel.hidden) return;
-
-    var wide = window.matchMedia('(min-width: 900px)').matches;
-    window.requestAnimationFrame(function () {
-        var box = panel.getBoundingClientRect();
-        if (wide) {
-            if (box.width > 0) map.panBy([-box.width / 2, 0], { animate: false });
-        } else if (box.height > 0) {
-            map.panBy([0, box.height / 2], { animate: false });
-        }
-    });
 }
 
 function closeUnitPanel() {
