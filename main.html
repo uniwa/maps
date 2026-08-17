@@ -178,6 +178,21 @@
         </button>
       </div>
 
+      <!-- One-time nudge toward the locate control, for a visitor who has never
+           been asked. Not a modal and not a prompt on load: it points at the
+           control, and pressing it is what fires the browser's request, which
+           then arrives with a reason attached. -->
+      <div class="geo-hint" id="geo-hint" data-testid="geo-hint" hidden>
+        <button type="button" class="geo-hint-action" id="geo-hint-action">
+          <svg class="icon" aria-hidden="true"><use href="#i-locate"></use></svg>
+          Δείτε τις μονάδες κοντά σας
+        </button>
+        <button type="button" class="geo-hint-close" id="geo-hint-close" title="Κλείσιμο">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+          <span class="sr-only">Κλείσιμο</span>
+        </button>
+      </div>
+
       <!-- Unit details. A panel rather than a modal, so the map stays visible
            and the selected pin keeps its context: a side card on a wide screen,
            a bottom sheet on a narrow one. -->

@@ -382,6 +382,22 @@ document.addEventListener('DOMContentLoaded', function () {
         openModal('legendModal');
     });
 
+    document.getElementById('geo-hint-action').addEventListener('click', function () {
+        dismissGeoHint(true);
+        /* Clicking the real control keeps one code path, and the browser still
+           counts this as user-activated because it happens in this handler. */
+        document.getElementById('locate-btn').click();
+    });
+    document.getElementById('geo-hint-close').addEventListener('click', function () {
+        dismissGeoHint(true);
+    });
+
+    /* Finding the button unaided means the hint has done its job */
+    var locateButton = document.getElementById('locate-btn');
+    if (locateButton) {
+        locateButton.addEventListener('click', function () { dismissGeoHint(true); });
+    }
+
     document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);
 
     /* Escape closes the details panel, matching the dialogs' behaviour */
@@ -425,8 +441,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /* Nothing specific was asked for, so show what is nearby -- but only
            for visitors who have already granted the permission. A cold prompt
-           on load is not worth what it costs. */
+           on load is not worth what it costs; anyone who has never been asked
+           gets the hint below instead. */
         MapsNearby.locateIfPermitted(locateOptions);
+        maybeShowGeoHint();
     } else {
         body.replaceChildren();
         resetUnitsLayer();
@@ -458,6 +476,52 @@ function applyFilters() {
     resetUnitsLayer();
     map.setView([MapsConfig.latGR, MapsConfig.lngGR], MapsConfig.zoomGR);
     loadUnits(collectFilters(false), true);
+}
+
+var GEO_HINT_KEY = 'maps.geoHint.dismissed';
+
+/**
+ * Offers the locate control to someone who has never been asked for the
+ * permission — a dismissible bubble pointing at the button, rather than a modal
+ * across the map or a prompt fired before the visitor knows what this is.
+ */
+function maybeShowGeoHint() {
+    var hint = document.getElementById('geo-hint');
+    if (!hint) return;
+
+    try {
+        if (window.localStorage.getItem(GEO_HINT_KEY)) return;
+    } catch (err) {
+        /* Private browsing: showing it every time is better than never */
+    }
+
+    function show() {
+        hint.hidden = false;
+        var control = document.querySelector('.locate-control');
+        if (control) control.classList.add('is-hinted');
+    }
+
+    if (!navigator.permissions || !navigator.permissions.query) {
+        show();
+        return;
+    }
+    navigator.permissions.query({ name: 'geolocation' })
+        .then(function (status) {
+            /* Already granted locates by itself; already denied has made its
+               choice. Only 'prompt' is worth a nudge. */
+            if (status.state === 'prompt') show();
+        })
+        .catch(show);
+}
+
+function dismissGeoHint(remember) {
+    var hint = document.getElementById('geo-hint');
+    if (hint) hint.hidden = true;
+    var control = document.querySelector('.locate-control');
+    if (control) control.classList.remove('is-hinted');
+    if (remember) {
+        try { window.localStorage.setItem(GEO_HINT_KEY, '1'); } catch (err) { /* ignore */ }
+    }
 }
 
 //Clear feature highlight when map is clicked
