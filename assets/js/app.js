@@ -371,6 +371,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('panel-collapse').addEventListener('click', togglePanel);
 
+    /* The narrowed rail is one affordance: a click anywhere on it opens the
+       sidebar. Its own icons still do their particular jobs, and the mark stops
+       being a link back to the site while it is the only thing showing -- what
+       is wanted there is the sidebar, not a reload. */
+    document.querySelector('.panel-rail').addEventListener('click', function (event) {
+        if (!document.getElementById('container').classList.contains('panel-collapsed')) return;
+        event.preventDefault();
+        expandPanel();
+    });
+
     /* The rail carries search and the footer material, nothing else: opening
        straight into the filters was a confusing place to arrive. */
     document.getElementById('rail-search').addEventListener('click', function () {

@@ -14,10 +14,11 @@
     --line: #d6dbe0;
     --bg: #fff;
     --bg-soft: #f4f6f8;
-    /* The sidebar is exactly as wide as the banner, and the rail exactly as
-       wide as the square mark, so both sit flush. */
+    /* The sidebar is exactly as wide as the banner. The rail is the phone's
+       width everywhere: 59px to fit the mark at native size was more map given
+       up than an emblem is worth, so the mark comes down to the rail instead. */
     --panel-w: 260px;
-    --rail-w: 59px;
+    --rail-w: 40px;
     --focus: #0b6ba8;
 }
 
@@ -144,15 +145,52 @@ a { color: var(--brand); }
     align-items: center;
 }
 
-.rail-brand { display: block; line-height: 0; }
-.rail-brand img { display: block; }
+/* A little room around the mark: filling the full 40px left the two pins
+   touching both edges and reading as clipped. */
+.rail-brand { display: block; line-height: 0; padding: 5px 3px 7px; }
+
+/* Down from its native 59px, with the extra pixels left in the file: a browser
+   downscaling 59px has detail to spare on a 2x screen, where an asset cut to
+   34px would have none. */
+.rail-brand img { display: block; width: 100%; height: auto; }
+
+/* Anywhere on the narrowed rail opens the sidebar: the strip is mostly empty,
+   and 40px of icon was a small target for the one thing anyone wants from it. */
+#container.panel-collapsed .panel-rail { cursor: pointer; }
+
+.rail-mid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    overflow: hidden;
+}
+
+.rail-wordmark {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ink-soft);
+    user-select: none;
+}
+
+/* A short viewport has no empty half to fill, and the words would be clipped */
+@media (max-height: 560px) {
+    .rail-wordmark { display: none; }
+}
 
 .rail-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     width: var(--rail-w);
-    height: 46px;
+    height: 44px;
     padding: 0;
     border: 0;
     background: none;
@@ -445,13 +483,6 @@ a { color: var(--brand); }
        since tapping the map is how the sidebar is put away. 18px was the tab
        and nothing else, which made it a fiddly target. */
     .panel { width: calc(100% - 48px); }
-
-    /* A narrower rail: on a phone every pixel of map counts, and the mark's
-       job -- saying whose service this is -- matters less here than the map. */
-    #container.panel-collapsed .panel { width: 40px; }
-    .panel-rail { width: 40px; }
-    .rail-brand { display: none; }
-    .rail-btn { width: 40px; height: 42px; }
 }
 
 /* --------------------------------------------------------------- spinner */
