@@ -405,19 +405,34 @@ a { color: var(--brand); }
 /* Unit details table, built in helper.js */
 .unit-table {
     width: 100%;
+    /* fixed, not auto: with auto the table sizes to its widest unbreakable
+       content -- an email address or a URL -- and grew past the sidebar,
+       producing a horizontal scrollbar and clipped values. */
+    table-layout: fixed;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12.5px;
 }
 .unit-table th,
 .unit-table td {
-    padding: 8px 10px;
+    padding: 7px 9px;
     border-bottom: 1px solid var(--line);
     text-align: left;
     vertical-align: top;
 }
+
+/* Values hold emails and URLs, which have no spaces to break at */
+.unit-table td { overflow-wrap: anywhere; }
+
+/* Labels are words, so they break only as a last resort -- eager breaking left
+   «Προσανατολι/σμός» split across two lines. */
+.unit-table th { overflow-wrap: break-word; }
 .unit-table th {
-    width: 38%;
+    /* Fixed rather than a percentage: wide enough for «Προσανατολισμός», the
+       longest label and one with no space to break at, measured at 121px. A
+       percentage shrank below that on a 260px sidebar and split the word. */
+    width: 122px;
     background: var(--bg-soft);
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--ink-soft);
 }
