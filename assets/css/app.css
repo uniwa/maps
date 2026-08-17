@@ -774,30 +774,30 @@ a { color: var(--brand); }
 
 .unit-panel-head {
     flex: none;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--line);
-}
-
-/* A row of its own for the title and its buttons. Wrapping them in one flex
-   line instead would put the buttons under a long name: with flex-wrap on, a
-   title wider than the space breaks the line rather than shrinking. */
-.unit-panel-headline {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
 }
 
-.unit-panel-tools {
+/* Pinned under the details rather than at the end of them: the table scrolls,
+   and a button that scrolls away is one nobody finds. */
+.unit-panel-foot {
     flex: none;
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
 }
 
-/* Confirmation for the share button, on its own line under the title rather
-   than floating over the card. */
+/* Beside the button rather than under it, so confirming the copy does not make
+   the card taller and shove the table it sits below. */
 .unit-share-note {
-    margin: 6px 0 0;
+    margin: 0;
     font-size: 11.5px;
     color: var(--brand);
 }

@@ -171,27 +171,25 @@
         <section id="unit-panel" class="unit-panel" data-testid="unit-panel"
                  aria-labelledby="feature-title" hidden>
           <header class="unit-panel-head">
-            <div class="unit-panel-headline">
             <h2 id="feature-title" data-testid="unit-title" tabindex="-1"></h2>
-            <div class="unit-panel-tools">
-              <!-- The address bar already carries the open unit; this is the
-                   discoverable way to get at it, and on a phone it hands the
-                   link to the share sheet. -->
-              <button type="button" class="icon-btn" id="unit-panel-share"
-                      data-testid="unit-share" title="Κοινοποίηση συνδέσμου">
-                <svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg>
-                <span class="sr-only">Κοινοποίηση συνδέσμου</span>
-              </button>
-              <button type="button" class="icon-btn" id="unit-panel-close">
-                <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
-                <span class="sr-only">Κλείσιμο</span>
-              </button>
-            </div>
-            </div>
-            <p class="unit-share-note" id="unit-share-note" data-testid="share-note"
-               role="status" hidden></p>
+            <button type="button" class="icon-btn" id="unit-panel-close">
+              <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+              <span class="sr-only">Κλείσιμο</span>
+            </button>
           </header>
           <div class="unit-panel-body" id="feature-info" data-testid="unit-info"></div>
+
+          <!-- Below the card rather than beside the title: up there it was
+               taking width from a name that needs all of it. The address bar
+               already carries the open unit; this is the discoverable way to
+               get at it, and on a phone it hands the link to the share sheet. -->
+          <div class="unit-panel-foot">
+            <button type="button" class="btn" id="unit-panel-share" data-testid="unit-share">
+              <svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg>Κοινοποίηση
+            </button>
+            <p class="unit-share-note" id="unit-share-note" data-testid="share-note"
+               role="status" hidden></p>
+          </div>
         </section>
 
         <!-- Attached to the sidebar's edge, so it travels with it: when the

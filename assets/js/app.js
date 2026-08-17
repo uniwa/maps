@@ -629,9 +629,9 @@ function shareUnit() {
     }
 
     copyText(url).then(function (ok) {
-        showShareNote(ok
-            ? 'Ο σύνδεσμος αντιγράφηκε'
-            : 'Δεν ήταν δυνατή η αντιγραφή του συνδέσμου.');
+        /* Short: it sits next to the button that was just pressed, so it does
+           not have to say which link it means. */
+        showShareNote(ok ? 'Αντιγράφηκε!' : 'Η αντιγραφή δεν ήταν δυνατή.');
     });
 }
 
