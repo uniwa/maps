@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <!-- Pinch-zoom is deliberately allowed; the previous user-scalable=no
+         blocked it, which fails WCAG 1.4.4 and hurts on small screens. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="theme-color" content="#1d73a3">
+    <meta name="description" content="Χάρτης των μονάδων του Πανελλήνιου Σχολικού Δικτύου, με αναζήτηση και φίλτρα.">
     <title>Χάρτης Μονάδων ΠΣΔ</title>
 
-    <link rel="stylesheet" href="assets/libs/bootstrap/bootstrap.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="assets/libs/leaflet/leaflet.css">
     <link rel="stylesheet" href="assets/libs/leaflet-markercluster/MarkerCluster.css">
     <link rel="stylesheet" href="assets/libs/leaflet-markercluster/MarkerCluster.Default.css">
@@ -26,216 +24,201 @@
   </head>
 
   <body>
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <a href="https://maps.sch.gr/main.html">
-              <img src="assets/img/Map-Banner-main.jpg" alt="Χάρτης Μονάδων ΠΣΔ">
-          </a>
-          <div class="navbar-icon-container">
-            <a href="#" class="navbar-icon pull-right visible-xs" id="nav-btn"><i class="fa fa-bars fa-lg white"></i></a>
-            <a href="#" class="navbar-icon pull-right visible-xs" id="sidebar-toggle-btn"><i class="fa fa-search fa-lg white"></i></a>
+    <!-- Icons, inlined so the page makes no third-party requests. These
+         replace a Font Awesome stylesheet fetched from a CDN. -->
+    <svg class="icon-defs" aria-hidden="true" focusable="false">
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.4 7-11a7 7 0 10-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#feature-list">Μετάβαση στα αποτελέσματα</a>
+
+    <header class="site-header">
+      <a class="site-brand" href="main.html">
+        <img src="assets/img/Map-Banner-main.jpg" alt="Χάρτης Μονάδων ΠΣΔ" width="220" height="40">
+      </a>
+
+      <button type="button" class="header-btn header-btn-mobile" id="sidebar-toggle-btn"
+              aria-controls="sidebar" aria-expanded="false">
+        <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+        <span class="sr-only">Αναζήτηση</span>
+      </button>
+
+      <button type="button" class="header-btn header-btn-mobile" id="nav-btn"
+              aria-controls="site-nav" aria-expanded="false">
+        <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        <span class="sr-only">Μενού</span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Κύριο μενού">
+        <button type="button" class="nav-item nav-item-desktop" id="list-btn">
+          <svg class="icon" aria-hidden="true"><use href="#i-list"></use></svg>Αναζήτηση
+        </button>
+
+        <details class="nav-item nav-details" id="downloadDrop">
+          <summary>
+            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Αρχεία
+          </summary>
+          <div class="nav-details-menu">
+            <a href="documents/user_guide_maps.pdf" download target="_blank" rel="noopener">
+              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Εγχειρίδιο Χρήστη Χάρτη Μονάδων ΠΣΔ
+            </a>
+            <a href="documents/term_of_use_maps.pdf" download target="_blank" rel="noopener">
+              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Όροι Χρήσης Υπηρεσίας
+            </a>
           </div>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li class="hidden-xs"><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="list-btn"><i class="fa fa-list white"></i>&nbsp;&nbsp;Αναζήτηση</a></li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" id="downloadDrop" href="#" role="button" data-toggle="dropdown"><i class="fa fa-cloud-download white"></i>&nbsp;&nbsp;Αρχεία <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                  <li><a href="documents/user_guide_maps.pdf" download="documents/user_guide_maps.pdf" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;&nbsp;Εγχειρίδιο Χρήστη Xάρτη Μονάδων ΠΣΔ</a></li>
-                  <li><a href="documents/term_of_use_maps.pdf" download="documents/term_of_use_maps.pdf" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;&nbsp;Όροι Xρήσης Υπηρεσίας</a></li>
-                </ul>
-            </li>
-            <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="about-btn"><i class="fa fa-question-circle white"></i>&nbsp;&nbsp;Πληροφορίες</a></li>
-			<li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="legend-btn"><i class="fa fa-envelope white"></i>&nbsp;&nbsp;Επικοινωνία</a></li>
-          </ul>
-        </div><!--/.navbar-collapse -->
-      </div>
-    </div>
+        </details>
+
+        <button type="button" class="nav-item" id="about-btn">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>Πληροφορίες
+        </button>
+        <button type="button" class="nav-item" id="legend-btn">
+          <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>Επικοινωνία
+        </button>
+      </nav>
+    </header>
 
     <div id="container">
-      <div id="sidebar" data-testid="sidebar">
-        <div class="sidebar-wrapper">
-          <div class="panel panel-default" id="features">
-            <div class="panel-heading">
-              <h3 class="panel-title">Φίλτρα Αναζήτησης
-              <button type="button" class="btn btn-xs btn-default pull-right" id="sidebar-hide-btn"><i class="fa fa-chevron-left"></i></button></h3>
-            </div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label for="search_name">
-                    Όνομα Μονάδας
-                  <input type="text" id="search_name" class="form-control search search_name" placeholder="" />
-                  </label>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label for="search_mm_id">
-                    Κωδικός ΜΜ
-                  <input type="text" id="search_mm_id" class="form-control search search_mm_id" placeholder="" />
-                  </label>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label for="search_registry_no">
-                    Κωδικός Υπουργείου
-                    <input type="text" id="search_registry_no" class="form-control search search_registry_no" placeholder="" />
-                  </label>
-                </div>
-              </div>
-                <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label id="municipality-label">
-                    Δήμος
-                  <div id="municipality" class="ms" data-testid="filter-municipality" data-filter="municipality" aria-label="Δήμος"></div>
-                </label>
-                </div>
-              </div>
-                <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label id="edu_admin-label">
-                    Διεύθυνση Εκπαίδευσης
-                    <div id="edu_admin" class="ms" data-testid="filter-edu_admin" data-filter="edu_admin" aria-label="Διεύθυνση Εκπαίδευσης"></div>
-                  </label>
-                </div>
-              </div>
-                <div class="row">
-                    <div class="col-xs-12 col-md-12">
-                        <label id="region_edu_admin-label">
-                            Περιφέρεια Εκπαίδευσης
-                            <div id="region_edu_admin" class="ms" data-testid="filter-region_edu_admin" data-filter="region_edu_admin" aria-label="Περιφέρεια Εκπαίδευσης"></div>
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                <div class="col-xs-12 col-md-12">
-                  <label id="unit_type-label">
-                    Τύπος Μονάδας
-                    <div id="unit_type" class="ms" data-testid="filter-unit_type" data-filter="unit_type" aria-label="Τύπος Μονάδας"></div>
-                  </label>
-                </div>
-              </div>
-            <div class="row">
-                <div class="col-xs-12 col-md-12">
-                    <label id="orientation_type-label">
-                        Προσανατολισμός
-                        <div id="orientation_type" class="ms" data-testid="filter-orientation_type" data-filter="orientation_type" aria-label="Προσανατολισμός"></div>
-                    </label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-xs-12 col-md-12">
-                    <label id="operation_shift-label">
-                        Ωράριο Λειτουργίας
-                        <div id="operation_shift" class="ms" data-testid="filter-operation_shift" data-filter="operation_shift" aria-label="Ωράριο Λειτουργίας"></div>
-                    </label>
-                </div>
-            </div>
-              <div class="row">
-                <div class="col-xs-6 col-md-6">
-                  <button id="apply-filters" type="button" class="btn btn-primary pull-right sort" data-sort="feature-name" id="sort-btn"><i class="fa fa-search"></i> Αναζήτηση</button>
-                </div>
-                <div class="col-xs-4 col-md-4 \">
-                  <button type="button" class="btn btn-primary" id="reset" value="Reset">Καθαρισμός</button>
-                </div>
-              </div>
-
-            </div>
-            <div class="sidebar-table">
-              <div id="units_info"></div>
-              <table class="table table-hover" id="feature-list" data-testid="feature-list">
-                <tbody class="list"></tbody>
-              </table>
-            </div>
-              <div class="panel-footer" id="sidebar-news"><h3 class="panel-title"><br><b>Νέα Λειτουργικότητα!</b><br><br>Κάντε δεξί κλίκ πάνω στο σχολείο, ώστε να πάρετε τον απευθείας σύνδεσμο ή/και τον κώδικα iframe για να προσθέσετε τον χάρτη στον ιστότοπό σας.</h3></div>
-          </div>
+      <aside id="sidebar" data-testid="sidebar" aria-label="Αναζήτηση μονάδων">
+        <div class="sidebar-header">
+          <h2>Φίλτρα Αναζήτησης</h2>
+          <button type="button" class="icon-btn" id="sidebar-hide-btn">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+            <span class="sr-only">Απόκρυψη φίλτρων</span>
+          </button>
         </div>
-      </div>
+
+        <form class="sidebar-filters" id="filters" novalidate>
+          <div class="filter-fields">
+          <p class="field">
+            <label for="search_name">Όνομα Μονάδας</label>
+            <input type="search" id="search_name" class="search search_name" autocomplete="off">
+          </p>
+          <p class="field">
+            <label for="search_mm_id">Κωδικός ΜΜ</label>
+            <input type="search" id="search_mm_id" class="search search_mm_id" autocomplete="off" inputmode="numeric">
+          </p>
+          <p class="field">
+            <label for="search_registry_no">Κωδικός Υπουργείου</label>
+            <input type="search" id="search_registry_no" class="search search_registry_no" autocomplete="off">
+          </p>
+          <p class="field">
+            <span class="field-label" id="municipality-label">Δήμος</span>
+            <span id="municipality" class="ms" data-testid="filter-municipality" data-filter="municipality"></span>
+          </p>
+          <p class="field">
+            <span class="field-label" id="edu_admin-label">Διεύθυνση Εκπαίδευσης</span>
+            <span id="edu_admin" class="ms" data-testid="filter-edu_admin" data-filter="edu_admin"></span>
+          </p>
+          <p class="field">
+            <span class="field-label" id="region_edu_admin-label">Περιφέρεια Εκπαίδευσης</span>
+            <span id="region_edu_admin" class="ms" data-testid="filter-region_edu_admin" data-filter="region_edu_admin"></span>
+          </p>
+          <p class="field">
+            <span class="field-label" id="unit_type-label">Τύπος Μονάδας</span>
+            <span id="unit_type" class="ms" data-testid="filter-unit_type" data-filter="unit_type"></span>
+          </p>
+          <p class="field">
+            <span class="field-label" id="orientation_type-label">Προσανατολισμός</span>
+            <span id="orientation_type" class="ms" data-testid="filter-orientation_type" data-filter="orientation_type"></span>
+          </p>
+          <p class="field">
+            <span class="field-label" id="operation_shift-label">Ωράριο Λειτουργίας</span>
+            <span id="operation_shift" class="ms" data-testid="filter-operation_shift" data-filter="operation_shift"></span>
+          </p>
+
+          </div>
+
+          <div class="sidebar-actions">
+            <button id="apply-filters" type="submit" class="btn btn-primary">
+              <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>Αναζήτηση
+            </button>
+            <button type="reset" class="btn" id="reset">Καθαρισμός</button>
+          </div>
+        </form>
+
+        <div class="sidebar-results">
+          <div id="units_info" aria-live="polite"></div>
+          <table id="feature-list" data-testid="feature-list">
+            <caption class="sr-only">Αποτελέσματα αναζήτησης μονάδων</caption>
+            <tbody class="list"></tbody>
+          </table>
+        </div>
+
+        <div class="sidebar-note" id="sidebar-news">
+          <strong>Νέα Λειτουργικότητα!</strong>
+          Κάντε δεξί κλικ πάνω στο σχολείο, ώστε να πάρετε τον απευθείας σύνδεσμο
+          ή/και τον κώδικα iframe για να προσθέσετε τον χάρτη στον ιστότοπό σας.
+        </div>
+      </aside>
+
       <div id="map" data-testid="map"></div>
     </div>
 
-    <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
-          </div>
-          <div class="modal-body">
-            <ul class="nav nav-tabs nav-justified" id="aboutTabs">
-              <li class="active"><a href="#about" data-toggle="tab"><i class="fa fa-question-circle"></i>&nbsp;Σχετικά με το maps.sch.gr</a></li>
-            </ul>
-            <div class="tab-content" id="aboutTabsContent">
-              <div class="tab-pane fade active in" id="about">
-                <div class="well well-sm">
-                    <div class="well well-sm">
-                        <p>Ο Χάρτης Μονάδων ΠΣΔ (<a href="https://maps.sch.gr" target="_blank">ΠΣΔ Maps</a>) υλοποιήθηκε με χάρτη OpenStreetMap ο οποίος έχει <a href="https://www.openstreetmap.org/copyright" target="_blank">ελεύθερη</a> άδεια χρήσης. Περιέχει γεωγραφικά σημεία ενεργών Μονάδων ΠΣΔ, με τα βασικά τους στοιχεία.</p>
-                        <p> Τα δεδομένα τροφοδοτούνται μεσω REST web services από το Μητρώο Μονάδων (<a href="https://mm.sch.gr" target="_blank">MM</a>).</p>
-                    </div>
-                </div>
-                  <div class="panel panel-primary">
-                  <div class="panel-heading">Δυνατότητες</div>
-                  <ul class="list-group">
-                    <li class="list-group-item">Αναζήτηση Μονάδων με Όνομα Μονάδας (ελέυθερο κείμενο)</li>
-                    <li class="list-group-item">Αναζήτηση Μονάδων με Κωδικό ΜΜ ή Κωδικό Υπουργείου (ακριβής κωδικός)</li>
-                    <li class="list-group-item">Αναζήτηση Μονάδων με φίλτρα Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης, Τύπο Μονάδας, Προσανατολισμό και Ωράριο Λειτουργίας (επιλογή από λίστα)</li>
-                    <li class="list-group-item">Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
-                    <li class="list-group-item">Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
-                    <li class="list-group-item">Δυνατότητα διαμοιρασμού του Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (χρήση δεξιού κλίκ και επιλογή "Αντιγραφή Συνδέσμου")</li>
-                    <li class="list-group-item">Δυνατότητα χρήσης του Χάρτη ώς embed με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (χρήση δεξιού κλίκ και επιλογή "Αντιγραφή Iframe")</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Κλείσιμο</button>
-          </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+    <dialog class="modal modal-lg" id="aboutModal" aria-labelledby="aboutModal-title">
+      <form method="dialog" class="modal-head">
+        <h2 id="aboutModal-title">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>Σχετικά με το maps.sch.gr
+        </h2>
+        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
+      </form>
+      <div class="modal-body">
+        <p>Ο Χάρτης Μονάδων ΠΣΔ (<a href="https://maps.sch.gr" target="_blank" rel="noopener">ΠΣΔ Maps</a>) υλοποιήθηκε με χάρτη OpenStreetMap ο οποίος έχει <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ελεύθερη</a> άδεια χρήσης. Περιέχει γεωγραφικά σημεία ενεργών Μονάδων ΠΣΔ, με τα βασικά τους στοιχεία.</p>
+        <p>Τα δεδομένα τροφοδοτούνται μέσω REST web services από το Μητρώο Μονάδων (<a href="https://mm.sch.gr" target="_blank" rel="noopener">ΜΜ</a>).</p>
 
-    <div class="modal fade" id="legendModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          </div>
-          <div class="modal-body">
-                 <div class="well well-sm">
-                <p>Υποστηρίζεται από το <b>Πανεπιστήμιο Δυτικής Αττικής</b></p>
-                <p>Email: <b>mm@sch.gr</b></p>
-				<p>Αναφορά Προβλημάτων: <a href="https://helpdesk.sch.gr/?category_id=9508" target="_blank">https://helpdesk.sch.gr/</a></p>
-                </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Κλείσιμο</button>
-          </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+        <h3>Δυνατότητες</h3>
+        <ul class="feature-list-info">
+          <li>Αναζήτηση Μονάδων με Όνομα Μονάδας (ελεύθερο κείμενο)</li>
+          <li>Αναζήτηση Μονάδων με Κωδικό ΜΜ ή Κωδικό Υπουργείου (ακριβής κωδικός)</li>
+          <li>Αναζήτηση Μονάδων με φίλτρα Δήμος, Διεύθυνση Εκπαίδευσης, Περιφέρεια Εκπαίδευσης, Τύπο Μονάδας, Προσανατολισμό και Ωράριο Λειτουργίας (επιλογή από λίστα)</li>
+          <li>Συνδυασμός και δυνατότητα πολλαπλής επιλογής όλων των φίλτρων αναζήτησης</li>
+          <li>Προβολή καρτέλας με βασικές πληροφορίες της Μονάδας</li>
+          <li>Δυνατότητα διαμοιρασμού του Χάρτη με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Συνδέσμου»)</li>
+          <li>Δυνατότητα χρήσης του Χάρτη ως embed με επιλεγμένα φίλτρα αναζήτησης και επίπεδο ζουμ (δεξί κλικ, «Αντιγραφή Iframe»)</li>
+        </ul>
+      </div>
+      <form method="dialog" class="modal-foot">
+        <button class="btn" value="close">Κλείσιμο</button>
+      </form>
+    </dialog>
 
-    <div class="modal fade" id="featureModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title text-primary" id="feature-title" data-testid="unit-title"></h4>
-          </div>
-          <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+    <dialog class="modal" id="legendModal" aria-labelledby="legendModal-title">
+      <form method="dialog" class="modal-head">
+        <h2 id="legendModal-title">
+          <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>Επικοινωνία
+        </h2>
+        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
+      </form>
+      <div class="modal-body">
+        <p>Υποστηρίζεται από το <b>Πανεπιστήμιο Δυτικής Αττικής</b></p>
+        <p>Email: <b><a href="mailto:mm@sch.gr">mm@sch.gr</a></b></p>
+        <p>Αναφορά Προβλημάτων: <a href="https://helpdesk.sch.gr/?category_id=9508" target="_blank" rel="noopener">https://helpdesk.sch.gr/</a></p>
+      </div>
+      <form method="dialog" class="modal-foot">
+        <button class="btn" value="close">Κλείσιμο</button>
+      </form>
+    </dialog>
 
-    <script src="assets/libs/jquery/jquery-2.1.4.min.js"></script>
-    <script src="assets/libs/bootstrap/bootstrap-3.3.5.min.js"></script>
-    <script src="assets/libs/leaflet/leaflet-1.6.0.min.js "></script>
+    <dialog class="modal" id="featureModal" aria-labelledby="feature-title">
+      <form method="dialog" class="modal-head">
+        <h2 id="feature-title" data-testid="unit-title"></h2>
+        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
+      </form>
+      <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
+      <form method="dialog" class="modal-foot">
+        <button class="btn" value="close">Κλείσιμο</button>
+      </form>
+    </dialog>
+
+    <script src="assets/libs/leaflet/leaflet-1.6.0.min.js"></script>
     <script src="assets/libs/leaflet-markercluster/leaflet.markercluster-1.4.1.min.js"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/lookups.js"></script>

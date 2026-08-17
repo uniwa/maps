@@ -23,138 +23,78 @@ function hideSpinner() {
 }
 
 //---------------------Get url functions---------------------
-function getUrlVars() {
-    var vars = {};
-    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-        vars[key] = value;
-    });
-    return vars;
-}
-
 function getUrlParam(parameter, defaultvalue) {
-    var urlparameter = defaultvalue;
-    if(window.location.href.indexOf(parameter) > -1){
-        urlparameter = getUrlVars()[parameter];
-    }
-    return urlparameter;
+    var value = new URLSearchParams(window.location.search).get(parameter);
+    return (value === null || value === '') ? defaultvalue : value;
 }
 
 function getUrlParams()
 {
-    var arrValues = [];
-    var urlName = getUrlParam('name', '');
-    var urlMMID = getUrlParam('mm_id', '');
-    var urlRegistryNo = getUrlParam('registry_no', '');
-    var urlEduAdmin = getUrlParam('edu_admin', '');
-    var urlRegionEduAdmin = getUrlParam('region_edu_admin', '');
-    var urlMunicipality = getUrlParam('municipality', '');
-    var urlUnitType = getUrlParam('unit_type', '');
-    var urlOrientationType = getUrlParam('orientation_type', '');
-    var urlOperationShift = getUrlParam('operation_shift', '');
-    var zoom = getUrlParam('zoom', MapsConfig.zoomGR);
-    var lat = getUrlParam('lat', MapsConfig.latGR);
-    var lng = getUrlParam('lng', MapsConfig.lngGR);
+    /* The registry expects the same parameter names the URL uses, so values
+       are passed through rather than translated. */
+    var FIELDS = [
+        { param: 'name',             key: 'name',             numeric: false },
+        { param: 'mm_id',            key: 'mmID',             numeric: false },
+        { param: 'registry_no',      key: 'registryNo',       numeric: false },
+        { param: 'edu_admin',        key: 'eduAdmins',        numeric: true },
+        { param: 'region_edu_admin', key: 'regionEduAdmins',  numeric: true },
+        { param: 'municipality',     key: 'municipalities',   numeric: true },
+        { param: 'unit_type',        key: 'unitTypes',        numeric: true },
+        { param: 'orientation_type', key: 'orientationTypes', numeric: true },
+        { param: 'operation_shift',  key: 'operationShifts',  numeric: true }
+    ];
 
-    if (urlName != '' && urlName !== undefined)
-    {
-        var searchName = urlName.split(',').map(function (item)
-        {
-            return decodeURI(item);
-        });
-        arrValues.push('name=' + urlName);
-    }
-    if (urlMMID != '' && urlMMID !== undefined)
-    {
-        var searchMMID = urlMMID.split(',').map(function (item)
-        {
-            return decodeURI(item);
-        });
-        arrValues.push('mm_id=' + urlMMID);
-    }
-    if (urlRegistryNo != '' && urlRegistryNo !== undefined)
-    {
-        var searchRegistryNo = urlRegistryNo.split(',').map(function (item)
-        {
-            return decodeURI(item);
-        });
-        arrValues.push('registry_no=' + urlRegistryNo);
-    }
-    if (urlEduAdmin != '' && urlEduAdmin !== undefined)
-    {
-        var searchEduAdmins = urlEduAdmin.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('edu_admin=' + urlEduAdmin);
-    }
-    if (urlRegionEduAdmin != '' && urlRegionEduAdmin !== undefined)
-    {
-        var searchRegionEduAdmins = urlRegionEduAdmin.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('region_edu_admin=' + urlRegionEduAdmin);
-    }
-    if (urlMunicipality != '' && urlMunicipality !== undefined)
-    {
-        var searchMunicipalities = urlMunicipality.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('municipality=' + urlMunicipality);
-    }
-    if (urlUnitType != '' && urlUnitType !== undefined)
-    {
-        var searchUnitTypes = urlUnitType.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('unit_type=' + urlUnitType);
-    }
-    if (urlOrientationType != '' && urlOrientationType !== undefined)
-    {
-        var searchOrientationTypes = urlOrientationType.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('orientation_type=' + urlOrientationType);
-    }
-    if (urlOperationShift != '' && urlOperationShift !== undefined)
-    {
-        var searchOperationShifts = urlOperationShift.split(',').map(function (item)
-        {
-            return parseInt(item, 10);
-        });
-        arrValues.push('operation_shift=' + urlOperationShift);
-    }
+    var arrValues = [];
+    var searchValues = {};
+
+    FIELDS.forEach(function (field) {
+        var raw = getUrlParam(field.param, '');
+        if (raw === '' || raw === undefined) {
+            searchValues[field.key] = '';
+            return;
+        }
+        arrValues.push(field.param + '=' + encodeURIComponent(raw));
+        searchValues[field.key] = field.numeric
+            ? raw.split(',').map(function (item) { return parseInt(item, 10); })
+            : raw.split(',');
+    });
 
     return {
         urlValues: arrValues,
-        searchValues: {
-            name: searchName ?? '',
-            mmID: searchMMID ?? '',
-            registryNo: searchRegistryNo ?? '',
-            eduAdmins: searchEduAdmins ?? '',
-            regionEduAdmins: searchRegionEduAdmins ?? '',
-            municipalities: searchMunicipalities ?? '',
-            unitTypes: searchUnitTypes ?? '',
-            orientationTypes: searchOrientationTypes ?? '',
-            operationShifts: searchOperationShifts ?? ''
-        },
-        zoom: zoom,
-        lat: lat,
-        lng: lng
-    }
+        searchValues: searchValues,
+        zoom: getUrlParam('zoom', MapsConfig.zoomGR),
+        lat: getUrlParam('lat', MapsConfig.latGR),
+        lng: getUrlParam('lng', MapsConfig.lngGR)
+    };
 }
 
 //---------------------General functions---------------------
+/**
+ * On a narrow screen the sidebar slides over the map; on a wide one the grid
+ * collapses its column. One class each, instead of jQuery's animate().
+ */
 function animateSidebar()
 {
-    $("#sidebar").animate({
-        width: "toggle"
-    }, 350, function () {
+    var sidebar = document.getElementById('sidebar');
+    var container = document.getElementById('container');
+    var toggle = document.getElementById('sidebar-toggle-btn');
+    if (!sidebar || !container) return;
+
+    var open;
+    if (window.matchMedia('(min-width: 900px)').matches) {
+        container.classList.toggle('sidebar-hidden');
+        open = !container.classList.contains('sidebar-hidden');
+    } else {
+        sidebar.classList.toggle('is-open');
+        open = sidebar.classList.contains('is-open');
+    }
+
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    if (typeof map !== 'undefined' && map) {
         map.invalidateSize();
-    });
+    }
 }
 
 function clearHighlight() {
@@ -185,90 +125,126 @@ function onEachFeature(feature,layer) {
     }
 }
 
-function sanitization(string) {
-    var sanitize_string='';
-    if (string) {
-        sanitize_string = string.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-    }
-    return sanitize_string;
+function onUnitClick(APIEndpoint) {
+    fetch(APIEndpoint)
+        .then(function (response) { return response.json(); })
+        .then(function (results) {
+            if (!results || !results.data || !results.data[0]) {
+                throw new Error('no unit in response');
+            }
+            var unitData = results.data[0];
+
+            if (!MapsConfig.showUnitSites) {
+                showUnitModal(unitData, null);
+                return null;
+            }
+            /* Websites come from a separate endpoint. Show the popup either
+               way, rather than swallowing it when that request fails. */
+            return fetch(MapsConfig.mmSiteUrl + 'client/views/sch_sites_export.php?mm_id=' + encodeURIComponent(unitData.mm_id))
+                .then(function (response) { return response.json(); })
+                .catch(function () { return null; })
+                .then(function (sites) { showUnitModal(unitData, sites); });
+        })
+        .catch(function (err) {
+            console.error('MM api connection error - Unit Info', err);
+        });
 }
 
-function onUnitClick(APIEndpoint) {
-    $.getJSON(APIEndpoint, function (results) {
-        if (results?.data?.[0] == null) {
-            //console.log('MM api connection error - Unit Info');
-            return;
-        }
-        var unitData = results.data[0];
+/* One row of the unit table. `value` may be a string or a node. Building this
+   as DOM rather than concatenated HTML removes the escaping question entirely. */
+function unitRow(label, value) {
+    var tr = document.createElement('tr');
+    var th = document.createElement('th');
+    th.textContent = label;
+    var td = document.createElement('td');
+    if (value instanceof Node) {
+        td.appendChild(value);
+    } else {
+        td.textContent = value == null ? '' : String(value);
+    }
+    tr.appendChild(th);
+    tr.appendChild(td);
+    return tr;
+}
 
-        if (!MapsConfig.showUnitSites) {
-            showUnitModal(unitData, null);
-            return;
-        }
-        /* Websites live in a separate endpoint. Use always() so a failure there
-           still opens the modal, rather than swallowing it silently. */
-        $.getJSON(MapsConfig.mmSiteUrl + "client/views/sch_sites_export.php?mm_id=" + unitData.mm_id)
-            .always(function (sites) {
-                showUnitModal(unitData, sites);
-            });
-    });
+function unitLink(href, text) {
+    var link = document.createElement('a');
+    link.className = 'url-break';
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = text;
+    return link;
 }
 
 function showUnitModal(unitData, sites) {
-    var registryNo = unitData.registry_no ?? '';
-    var eduAdmin = unitData.edu_admin ?? '';
-    var regionEduAdmin = unitData.region_edu_admin ?? '';
-    var municipality = unitData.municipality ?? '';
-    var unitType = unitData.unit_type ?? '';
-    var orientationType = unitData.orientation_type ?? '';
-    var operationShift = unitData.operation_shift ?? '';
-    var streetAddress = unitData.street_address ?? '';
-    var postalCode = unitData.postal_code ?? '';
-    var phoneNumber = unitData.phone_number ?? '';
-    var faxNumber = unitData.fax_number ?? '';
-    var email = unitData.email ?? '';
     var latitude = unitData.latitude ?? 0;
     var longitude = unitData.longitude ?? 0;
 
-    var sitesRow = '';
+    var table = document.createElement('table');
+    table.className = 'unit-table';
+    var body = document.createElement('tbody');
+    table.appendChild(body);
+
+    body.appendChild(unitRow('Όνομα', unitData.name));
+    body.appendChild(unitRow('Κωδικός ΜΜ', unitLink(
+        MapsConfig.mmSiteUrl + 'main.php?auth=0&mm_id=' + encodeURIComponent(unitData.mm_id),
+        unitData.mm_id)));
+    body.appendChild(unitRow('Κωδικός Υπουργείου', unitData.registry_no ?? ''));
+    body.appendChild(unitRow('Διεύθυνση Εκπαίδευσης', unitData.edu_admin ?? ''));
+    body.appendChild(unitRow('Περιφέρεια Εκπαίδευσης', unitData.region_edu_admin ?? ''));
+    body.appendChild(unitRow('Δήμος', unitData.municipality ?? ''));
+    body.appendChild(unitRow('Τύπος Μονάδας', unitData.unit_type ?? ''));
+    body.appendChild(unitRow('Προσανατολισμός', unitData.orientation_type ?? ''));
+
     if (sites != null) {
-        sitesRow = "<tr><th>Ιστότοποι</th><td>" + (sites?.data?.sites ? sites.data.sites.map((site) => {
-            return "<a class='url-break' href='https://" + site.url + "' target='_blank'>" + site.url + "</a>";
-        }).join("<br />") : "-") + "</td></tr>";
+        var siteList = document.createElement('span');
+        var rows = (sites.data && sites.data.sites) ? sites.data.sites : [];
+        if (rows.length === 0) {
+            siteList.textContent = '-';
+        } else {
+            rows.forEach(function (site, index) {
+                if (index > 0) siteList.appendChild(document.createElement('br'));
+                siteList.appendChild(unitLink('https://' + site.url, site.url));
+            });
+        }
+        body.appendChild(unitRow('Ιστότοποι', siteList));
     }
 
-    var content = "<table class='table table-striped table-bordered table-condensed'>" +
-      "<tr><th>Όνομα</th><td>" + sanitization(unitData.name) +
-      "<tr><th>Κωδικός ΜΜ</th><td><a class='url-break' href=" + MapsConfig.mmSiteUrl + "main.php?auth=0&mm_id=" + unitData.mm_id + " target='_blank'>" + unitData.mm_id + "</a></td></tr>" +
-      "<tr><th>Κωδικός Υπουργείου</th><td>" + registryNo + "</td></tr>" +
-      "<tr><th>Διεύθυνση Εκπαίδευσης</th><td>" + eduAdmin + "</td></tr>" +
-      "<tr><th>Περιφέρεια Εκπαίδευσης</th><td>" + regionEduAdmin + "</td></tr>" +
-      "<tr><th>Δήμος</th><td>" + municipality + "</td></tr>" +
-      "<tr><th>Τύπος Μονάδας</th><td>" + unitType + "</td></tr>" +
-      "<tr><th>Προσανατολισμός</th><td>" + orientationType + "</td></tr>" +
-      sitesRow +
-      "<tr><th>Ωράριο Λειτουργίας</th><td>" + operationShift + "</td></tr>" +
-      "<tr><th>Διεύθυνση</th><td>" + streetAddress + "</td></tr>" +
-      "<tr><th>Τ.Κ.</th><td>" + postalCode + "</td></tr>" +
-      "<tr><th>Τηλέφωνο</th><td>" + phoneNumber + "</td></tr>" +
-      "<tr><th>Fax</th><td>" + faxNumber + "</td></tr>" +
-      "<tr><th>Email</th><td>" + email + "</td></tr>" +
-      "<table>";
+    body.appendChild(unitRow('Ωράριο Λειτουργίας', unitData.operation_shift ?? ''));
+    body.appendChild(unitRow('Διεύθυνση', unitData.street_address ?? ''));
+    body.appendChild(unitRow('Τ.Κ.', unitData.postal_code ?? ''));
+    body.appendChild(unitRow('Τηλέφωνο', unitData.phone_number ?? ''));
+    body.appendChild(unitRow('Fax', unitData.fax_number ?? ''));
+    body.appendChild(unitRow('Email', unitData.email ?? ''));
 
-    $("#feature-title").text(unitData.name);
-    $("#feature-info").html(content);
-    $("#featureModal").modal('show');
+    document.getElementById('feature-title').textContent = unitData.name;
+    var info = document.getElementById('feature-info');
+    info.replaceChildren(table);
+
+    openModal('featureModal');
+
     map.setView([latitude, longitude], 18);
     highlight.clearLayers().addLayer(
-      L.circleMarker(
-        [latitude, longitude],
-        highlightStyle
-      )
+        L.circleMarker([latitude, longitude], highlightStyle)
     );
 
-    /* Hide sidebar and go to the map on small screens */
-    if (document.body.clientWidth <= 767) {
-        $("#sidebar").hide();
+    /* On a narrow screen, get out of the way of the map */
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar && !window.matchMedia('(min-width: 900px)').matches) {
+        sidebar.classList.remove('is-open');
         map.invalidateSize();
+    }
+}
+
+/* <dialog> replaces the Bootstrap modal. Closing is handled by the
+   method="dialog" forms in the markup, and Escape works for free. */
+function openModal(id) {
+    var dialog = document.getElementById(id);
+    if (!dialog) return;
+    if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else {
+        dialog.setAttribute('open', '');
     }
 }

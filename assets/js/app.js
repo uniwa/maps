@@ -11,9 +11,9 @@ var urlParams = getUrlParams();
  * `lookup` - the registry reference list the options come from
  */
 var FILTERS = [
-    { param: 'name',             urlKey: 'name',             selector: '.form-control.search_name',        text: true },
-    { param: 'mm_id',            urlKey: 'mmID',             selector: '.form-control.search_mm_id',       text: true },
-    { param: 'registry_no',      urlKey: 'registryNo',       selector: '.form-control.search_registry_no', text: true },
+    { param: 'name',             urlKey: 'name',             selector: '#search_name',        text: true },
+    { param: 'mm_id',            urlKey: 'mmID',             selector: '#search_mm_id',       text: true },
+    { param: 'registry_no',      urlKey: 'registryNo',       selector: '#search_registry_no', text: true },
     { param: 'edu_admin',        urlKey: 'eduAdmins',        selector: '#edu_admin',        lookup: 'edu_admins' },
     { param: 'region_edu_admin', urlKey: 'regionEduAdmins',  selector: '#region_edu_admin', lookup: 'region_edu_admins' },
     { param: 'municipality',     urlKey: 'municipalities',   selector: '#municipality',     lookup: 'municipalities' },
@@ -25,27 +25,20 @@ var FILTERS = [
 /* param -> multi-select instance, for the filters backed by a reference list */
 var filterControls = {};
 
-$(document).ready(function () {
-    if (!MapsConfig.embed) {
-        initFilters();
-    }
-});
-
 function initFilters() {
     FILTERS.forEach(function (filter) {
         var value = urlParams.searchValues[filter.urlKey];
 
         if (filter.text) {
-            if (value && value.length) {
-                $(filter.selector).val(value);
+            var input = document.querySelector(filter.selector);
+            if (input && value && value.length) {
+                input.value = [].concat(value).join(',');
             }
             return;
         }
 
         var container = document.querySelector(filter.selector);
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         var control = MapsMultiSelect(container, {
             placeholder: 'Όλα',
@@ -81,12 +74,14 @@ function initFilters() {
 function collectFilters(encodeText) {
     var params = [];
     FILTERS.forEach(function (filter) {
-        var value = filter.text
-            ? $(filter.selector).val()
-            : (filterControls[filter.param] ? filterControls[filter.param].getValue() : null);
-        if (!value || value.length === 0) {
-            return;
+        var value;
+        if (filter.text) {
+            var input = document.querySelector(filter.selector);
+            value = input ? input.value.trim() : '';
+        } else {
+            value = filterControls[filter.param] ? filterControls[filter.param].getValue() : null;
         }
+        if (!value || value.length === 0) return;
         params.push(filter.param + '=' + (encodeText && filter.text ? encodeURI(value) : value));
     });
     return params.join('&');
@@ -101,16 +96,34 @@ function resetUnitsLayer() {
     });
 }
 
+/* One result row, built as DOM so unit names need no escaping */
 function featureRow(feature) {
-    return '<tr class="feature-row" data-testid="feature-row"' +
-        ' mm_id="' + feature.properties.mmId + '"' +
-        ' name_sch="' + sanitization(feature.properties.name) + '"' +
-        ' lat="' + feature.geometry.coordinates[1] + '"' +
-        ' lng="' + feature.geometry.coordinates[0] + '">' +
-        '<td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/unit.png"></td>' +
-        '<td class="feature-name">' + sanitization(feature.properties.name) + '</td>' +
-        '<td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td>' +
-        '</tr>';
+    var row = document.createElement('tr');
+    row.className = 'feature-row';
+    row.dataset.testid = 'feature-row';
+    row.dataset.mmId = feature.properties.mmId;
+    row.dataset.lat = feature.geometry.coordinates[1];
+    row.dataset.lng = feature.geometry.coordinates[0];
+
+    var iconCell = document.createElement('td');
+    var icon = document.createElement('img');
+    icon.width = 16;
+    icon.height = 18;
+    icon.alt = '';
+    icon.src = 'assets/img/unit.png';
+    iconCell.appendChild(icon);
+
+    var nameCell = document.createElement('td');
+    nameCell.className = 'feature-name';
+    nameCell.textContent = feature.properties.name;
+
+    var chevronCell = document.createElement('td');
+    chevronCell.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg>';
+
+    row.appendChild(iconCell);
+    row.appendChild(nameCell);
+    row.appendChild(chevronCell);
+    return row;
 }
 
 /**
@@ -122,95 +135,42 @@ function featureRow(feature) {
 function loadUnits(query, renderList) {
     var url = MapsConfig.baseMMUrl + 'units.geojson?state=1' + (query ? '&' + query : '');
 
-    $.getJSON(url, function (results) {
-        if (results?.data == null) {
-            console.log('MM api connection error - ' + url);
-            hideSpinner();
-            return;
-        }
-        if (renderList) {
-            var res = $('#feature-list tbody');
-            if (results.count === 0) {
-                res.append('<tr><td colspan="3"><h4 class="rip" data-testid="no-results">Κανένα Αποτέλεσμα</h4></td></tr>');
-            } else {
-                res.append(results.data.features.map(featureRow).join(''));
+    fetch(url)
+        .then(function (response) { return response.json(); })
+        .then(function (results) {
+            if (!results || results.data == null) {
+                throw new Error('unexpected response');
             }
-            // Adjust sidebar height to extend to the bottom
-            $('.sidebar-table').height(function(index, height) {
-                return window.innerHeight - $(this).offset().top;
-            });
-        }
-        units.addData(results.data);
-        markerClusters.addLayer(units);
-        hideSpinner();
-    });
+            if (renderList) {
+                var body = document.querySelector('#feature-list tbody');
+                if (results.count === 0) {
+                    var row = document.createElement('tr');
+                    var cell = document.createElement('td');
+                    cell.colSpan = 3;
+                    var message = document.createElement('p');
+                    message.className = 'rip';
+                    message.dataset.testid = 'no-results';
+                    message.textContent = 'Κανένα Αποτέλεσμα';
+                    cell.appendChild(message);
+                    row.appendChild(cell);
+                    body.appendChild(row);
+                } else {
+                    var fragment = document.createDocumentFragment();
+                    results.data.features.forEach(function (feature) {
+                        fragment.appendChild(featureRow(feature));
+                    });
+                    body.appendChild(fragment);
+                }
+            }
+            units.addData(results.data);
+            markerClusters.addLayer(units);
+            hideSpinner();
+        })
+        .catch(function (err) {
+            console.error('MM api connection error - ' + url, err);
+            hideSpinner();
+        });
 }
-
-//Run when user click on unit name at left row
-$(document).on("click", ".feature-row", function () {
-    var urlCustom = MapsConfig.baseMMUrl + 'units?mm_id=' + $(this).attr("mm_id");
-    $(document).off("mouseout", ".feature-row", clearHighlight);
-    onUnitClick(urlCustom)
-});
-
-//show red circle when mouse is over unit name at left row
-if ( !("ontouchstart" in window) ) {
-  $(document).on("mouseover", ".feature-row", function(e) {
-      highlight.clearLayers().addLayer(
-          L.circleMarker(
-              [$(this).attr("lat"), $(this).attr("lng")],
-              highlightStyle
-          )
-      );
-  });
-}
-
-//remove red circle when mouse is leave from unit name at left row
-$(document).on("mouseout", ".feature-row", clearHighlight);
-
-
-//left column-----------------------------------------------------
-//reset button
-$("#reset").click(function() {
-    Object.keys(filterControls).forEach(function (param) {
-        filterControls[param].clear();
-    });
-    $(':input').val('');
-});
-
-//navbar menu-----------------------------------------------------
-//search
-$("#list-btn").click(function() {
-    animateSidebar();
-    return false;
-});
-//informations
-$("#about-btn").click(function() {
-  $("#aboutModal").modal("show");
-  $(".navbar-collapse.in").collapse("hide");
-  return false;
-});
-//contact
-$("#legend-btn").click(function() {
-  $("#legendModal").modal("show");
-  $(".navbar-collapse.in").collapse("hide");
-  return false;
-});
-//only at response
-$("#nav-btn").click(function() {
-  $(".navbar-collapse").collapse("toggle");
-  return false;
-});
-//only at response
-$("#sidebar-toggle-btn").click(function() {
-  animateSidebar();
-  return false;
-});
-
-$("#sidebar-hide-btn").click(function() {
-  animateSidebar();
-  return false;
-});
 
 //----------------------Initial variables for map--------------------------------------------------------
 /* Basemap Layers */
@@ -233,7 +193,7 @@ var markerClusters = new L.MarkerClusterGroup({
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true
 });
-/* Empty layer placeholder to add to layer control for listening when to add/remove units to markerClusters layer */
+/* Empty layer placeholder, swapped out whenever the filters change */
 var units = L.geoJson(null, {
   pointToLayer: pointToLayer,
   onEachFeature: onEachFeature
@@ -246,45 +206,124 @@ map = L.map("map", {
     zoomControl: false,
     attributionControl: false
 });
-//added atributor control
-var attributionControl = L.control({
-    position: "bottomright"
-});
+
+var attributionControl = L.control({ position: "bottomright" });
 attributionControl.onAdd = function () {
     var div = L.DomUtil.create("div", "leaflet-control-attribution");
     div.innerHTML = baseMap.getAttribution();
     return div;
 };
 map.addControl(attributionControl);
-//added zoom control
-var zoomControl = L.control.zoom({
-    position: "bottomright"
-}).addTo(map);
+L.control.zoom({ position: "bottomright" }).addTo(map);
 
-//-----------------------------Show markers to map-------------------------------------------------
-$('#units_info').empty();
-var initialQuery = urlParams.urlValues.join('&');
-/* The embedded map has no sidebar, so it never renders the result list */
-if (MapsConfig.embed || initialQuery === '') {
-    loadUnits(initialQuery, false);
+//-----------------------------Wire up the interface----------------------------
+document.addEventListener('DOMContentLoaded', function () {
+    if (MapsConfig.embed) {
+        return;
+    }
+
+    initFilters();
+
+    var container = document.getElementById('container');
+    var sidebar = document.getElementById('sidebar');
+    var body = document.querySelector('#feature-list tbody');
+
+    /* Result rows are added and removed constantly, so listen on the table */
+    body.addEventListener('click', function (event) {
+        var row = event.target.closest('.feature-row');
+        if (!row) return;
+        onUnitClick(MapsConfig.baseMMUrl + 'units?mm_id=' + row.dataset.mmId);
+    });
+
+    if (!('ontouchstart' in window)) {
+        body.addEventListener('mouseover', function (event) {
+            var row = event.target.closest('.feature-row');
+            if (!row) return;
+            highlight.clearLayers().addLayer(
+                L.circleMarker([row.dataset.lat, row.dataset.lng], highlightStyle)
+            );
+        });
+        body.addEventListener('mouseout', clearHighlight);
+    }
+
+    document.getElementById('filters').addEventListener('submit', function (event) {
+        event.preventDefault();
+        applyFilters();
+    });
+
+    document.getElementById('filters').addEventListener('reset', function () {
+        Object.keys(filterControls).forEach(function (param) {
+            filterControls[param].clear();
+        });
+    });
+
+    document.getElementById('sidebar-hide-btn').addEventListener('click', animateSidebar);
+    document.getElementById('sidebar-toggle-btn').addEventListener('click', animateSidebar);
+    document.getElementById('list-btn').addEventListener('click', animateSidebar);
+
+    var navToggle = document.getElementById('nav-btn');
+    var nav = document.getElementById('site-nav');
+    navToggle.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    document.getElementById('about-btn').addEventListener('click', function () {
+        nav.classList.remove('is-open');
+        openModal('aboutModal');
+    });
+    document.getElementById('legend-btn').addEventListener('click', function () {
+        nav.classList.remove('is-open');
+        openModal('legendModal');
+    });
+
+    /* The map should be reachable again once a unit's details are closed */
+    document.getElementById('featureModal').addEventListener('close', clearHighlight);
+
+    //-----------------------------Show markers to map---------------------------
+    var initialQuery = urlParams.urlValues.join('&');
+    if (initialQuery === '') {
+        loadUnits('', false);
+    } else {
+        document.getElementById('sidebar-news').hidden = true;
+        body.replaceChildren();
+        resetUnitsLayer();
+        map.setView([urlParams.lat, urlParams.lng], urlParams.zoom);
+        loadUnits(initialQuery, true);
+        /* A shared link arrives with filters, so show the results rather than
+           making the visitor find the search button. */
+        if (!window.matchMedia('(min-width: 900px)').matches) {
+            sidebar.classList.add('is-open');
+            document.getElementById('sidebar-toggle-btn').setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    void container;
+});
+
+/* The embedded map has no sidebar, so it renders no result list */
+if (MapsConfig.embed) {
+    loadUnits(urlParams.urlValues.join('&'), false);
 }
-else
-{
-    document.getElementById("sidebar-news").style.display = "none";
-    $('#feature-list tbody').empty();
+
+function applyFilters() {
+    document.getElementById('sidebar-news').hidden = true;
+    clearHighlight();
+    window.history.pushState({}, document.title, MapsConfig.baseNewUrl);
+    showSpinner();
+
+    document.querySelector('#feature-list tbody').replaceChildren();
+    document.getElementById('units_info').replaceChildren();
     resetUnitsLayer();
-    map.setView(
-        [urlParams.lat, urlParams.lng],
-        urlParams.zoom
-    );
-    loadUnits(initialQuery, true);
+    map.setView([MapsConfig.latGR, MapsConfig.lngGR], MapsConfig.zoomGR);
+    loadUnits(collectFilters(false), true);
 }
-
 
 //Clear feature highlight when map is clicked
 map.on("click", function() {
     highlight.clearLayers();
 });
+
 /**
  * Builds one labelled read-only field with a copy button.
  * Replaces clipboard.js, which needed the value to live in the DOM first so
@@ -377,36 +416,3 @@ map.on('contextmenu', function (e) {
         .openOn(map);
 });
 }
-
-/* Highlight search box text on click TODO remove?*/
-$("#searchbox").click(function () {
-  $(this).select();
-});
-
-/* Prevent hitting enter from refreshing the page TODO check*/
-$("#searchbox").keypress(function (e) {
-  if (e.which == 13) {
-    e.preventDefault();
-  }
-});
-
-//TODO remove?
-$("#featureModal").on("hidden.bs.modal", function (e) {
-  $(document).on("mouseout", ".feature-row", clearHighlight);
-});
-
-//run when user click at search
-$('#apply-filters').click(function() {
-    document.getElementById("sidebar-news").style.display = "none";
-    clearHighlight();
-    window.history.pushState({}, document.title, MapsConfig.baseNewUrl);
-    showSpinner();
-    $('#feature-list tbody').empty();
-    $('#units_info').empty();
-    resetUnitsLayer();
-    map.setView(
-        [MapsConfig.latGR, MapsConfig.lngGR],
-        MapsConfig.zoomGR
-    );
-    loadUnits(collectFilters(false), true);
-});

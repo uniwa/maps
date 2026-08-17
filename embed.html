@@ -1,21 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="theme-color" content="#1d73a3">
+    <meta name="description" content="Χάρτης των μονάδων του Πανελλήνιου Σχολικού Δικτύου.">
     <title>Χάρτης Μονάδων ΠΣΔ</title>
 
-    <link rel="stylesheet" href="assets/libs/bootstrap/bootstrap.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="assets/libs/leaflet/leaflet.css">
     <link rel="stylesheet" href="assets/libs/leaflet-markercluster/MarkerCluster.css">
     <link rel="stylesheet" href="assets/libs/leaflet-markercluster/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="assets/css/app.css">
     <link rel="stylesheet" href="assets/css/app_embed.css">
     <link rel="apple-touch-icon" sizes="76x76" href="assets/img/favicon-76.png">
     <link rel="apple-touch-icon" sizes="120x120" href="assets/img/favicon-120.png">
@@ -25,30 +22,31 @@
   </head>
 
   <body>
+    <svg class="icon-defs" aria-hidden="true" focusable="false">
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    </svg>
+
     <div id="container">
       <div id="map" data-testid="map"></div>
     </div>
-    <div class="modal fade" id="featureModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title text-primary" id="feature-title" data-testid="unit-title"></h4>
-          </div>
-          <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <script src="assets/libs/jquery/jquery-2.1.4.min.js"></script>
-    <script src="assets/libs/bootstrap/bootstrap-3.3.5.min.js"></script>
-    <script src="assets/libs/leaflet/leaflet-1.6.0.min.js "></script>
+    <dialog class="modal" id="featureModal" aria-labelledby="feature-title">
+      <form method="dialog" class="modal-head">
+        <h2 id="feature-title" data-testid="unit-title"></h2>
+        <button class="icon-btn" value="close"><svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg><span class="sr-only">Κλείσιμο</span></button>
+      </form>
+      <div class="modal-body" id="feature-info" data-testid="unit-info"></div>
+      <form method="dialog" class="modal-foot">
+        <button class="btn" value="close">Κλείσιμο</button>
+      </form>
+    </dialog>
+
+    <script src="assets/libs/leaflet/leaflet-1.6.0.min.js"></script>
     <script src="assets/libs/leaflet-markercluster/leaflet.markercluster-1.4.1.min.js"></script>
     <script>window.MapsConfigOverride = { embed: true, showUnitSites: false };</script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/lookups.js"></script>
+    <script src="assets/js/multiselect.js"></script>
     <script src="assets/js/helper.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
