@@ -70,24 +70,26 @@ function getUrlParams()
 
 //---------------------General functions---------------------
 /**
- * Collapses the panel down to its search bar, and back.
+ * Slides the sidebar out of the way, and back.
  *
- * The control lives in the bar, which never hides, so the panel can always be
- * brought back. The previous collapse button sat inside the part that got
- * hidden, leaving no visible way to reopen it.
+ * The state lives on the container, because the tab that reverses it travels
+ * with the sidebar and the brand mark that replaces it does not.
  */
 function togglePanel()
 {
-    var panel = document.getElementById('panel');
+    var container = document.getElementById('container');
     var toggle = document.getElementById('panel-collapse');
-    if (!panel) return;
+    if (!container) return;
 
-    var collapsed = panel.classList.toggle('is-collapsed');
+    var collapsed = container.classList.toggle('panel-collapsed');
     if (toggle) {
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
         toggle.querySelector('.sr-only').textContent = collapsed
-            ? 'Εμφάνιση αποτελεσμάτων'
-            : 'Απόκρυψη αποτελεσμάτων';
+            ? 'Εμφάνιση πλαϊνής στήλης'
+            : 'Απόκρυψη πλαϊνής στήλης';
+    }
+    if (typeof map !== 'undefined' && map) {
+        map.invalidateSize();
     }
 }
 
@@ -224,11 +226,11 @@ function showUnitModal(unitData, sites) {
     );
     keepUnitInView();
 
-    /* On a narrow screen the details sheet takes over the lower half, so fold
-       the search panel down to its bar and leave the map legible. */
-    var panel = document.getElementById('panel');
-    if (panel && !window.matchMedia('(min-width: 900px)').matches &&
-        !panel.classList.contains('is-collapsed')) {
+    /* On a phone the sidebar fills the screen, so get it out of the way when
+       the details sheet opens. */
+    var container = document.getElementById('container');
+    if (container && !window.matchMedia('(min-width: 900px)').matches &&
+        !container.classList.contains('panel-collapsed')) {
         togglePanel();
     }
 }
@@ -250,19 +252,22 @@ function openUnitPanel() {
 }
 
 /**
- * On a phone the details sheet covers the lower half of the map, which is
- * exactly where setView just put the unit. Shift the view up so the pin sits
- * in the part still visible, the way map apps do when a card opens.
+ * setView centres the unit in the map container, but part of that container is
+ * behind the details panel: a sheet across the bottom on a phone, a column down
+ * the left on a wide screen. Shift the view so the pin lands in what is
+ * actually visible, the way map apps do when a card opens.
  */
 function keepUnitInView() {
     var panel = document.getElementById('unit-panel');
     if (!panel || panel.hidden) return;
-    if (window.matchMedia('(min-width: 900px)').matches) return;
 
+    var wide = window.matchMedia('(min-width: 900px)').matches;
     window.requestAnimationFrame(function () {
-        var covered = panel.getBoundingClientRect().height;
-        if (covered > 0) {
-            map.panBy([0, covered / 2], { animate: false });
+        var box = panel.getBoundingClientRect();
+        if (wide) {
+            if (box.width > 0) map.panBy([-box.width / 2, 0], { animate: false });
+        } else if (box.height > 0) {
+            map.panBy([0, box.height / 2], { animate: false });
         }
     });
 }

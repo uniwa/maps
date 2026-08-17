@@ -59,10 +59,6 @@
         </div>
 
         <div class="panel-bar">
-          <a class="panel-brand-mark" href="index.php" title="Χάρτης Μονάδων ΠΣΔ">
-            <img src="assets/img/brand-mark.png" alt="Χάρτης Μονάδων ΠΣΔ"
-                 width="45" height="45">
-          </a>
 
           <div class="search-box">
             <label class="sr-only" for="search_name">Όνομα Μονάδας</label>
@@ -76,12 +72,6 @@
             <ul class="suggestions" id="search-suggestions" data-testid="suggestions"
                 role="listbox" aria-label="Προτάσεις αναζήτησης" hidden></ul>
           </div>
-
-          <button type="button" class="panel-collapse" id="panel-collapse"
-                  aria-controls="filters" aria-expanded="true" data-testid="panel-collapse">
-            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
-            <span class="sr-only">Απόκρυψη αποτελεσμάτων</span>
-          </button>
 
           <details class="panel-menu" id="panel-menu">
             <summary title="Μενού" data-testid="menu-toggle">
@@ -161,7 +151,22 @@
             </table>
           </div>
         </form>
+
+        <!-- Attached to the sidebar's edge, so it travels with it: when the
+             sidebar slides out, the tab is left sitting against the viewport
+             edge and is still the way back. -->
+        <button type="button" class="panel-tab" id="panel-collapse"
+                aria-controls="panel" aria-expanded="true" data-testid="panel-collapse">
+          <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+          <span class="sr-only">Απόκρυψη πλαϊνής στήλης</span>
+        </button>
       </div>
+
+      <!-- Shown only while the sidebar is away, so the service is still
+           identifiable and there is a route back to the landing page. -->
+      <a class="brand-mini" id="brand-mini" href="index.php" title="Χάρτης Μονάδων ΠΣΔ">
+        <img src="assets/img/brand-mark.png" alt="Χάρτης Μονάδων ΠΣΔ" width="45" height="45">
+      </a>
 
       <!-- Unit details. A panel rather than a modal, so the map stays visible
            and the selected pin keeps its context: a side card on a wide screen,
