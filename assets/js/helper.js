@@ -163,15 +163,15 @@ function getUrlParams()
     return {
         urlValues: arrValues,
         searchValues: {
-            name: _.isNil(searchName) ? '' : searchName,
-            mmID: _.isNil(searchMMID) ? '' : searchMMID,
-            registryNo: _.isNil(searchRegistryNo) ? '' : searchRegistryNo,
-            eduAdmins: _.isNil(searchEduAdmins) ? '' : searchEduAdmins,
-            regionEduAdmins: _.isNil(searchRegionEduAdmins) ? '' : searchRegionEduAdmins,
-            municipalities: _.isNil(searchMunicipalities) ? '' : searchMunicipalities,
-            unitTypes: _.isNil(searchUnitTypes) ? '' : searchUnitTypes,
-            orientationTypes: _.isNil(searchOrientationTypes) ? '' : searchOrientationTypes,
-            operationShifts: _.isNil(searchOperationShifts) ? '' : searchOperationShifts
+            name: searchName ?? '',
+            mmID: searchMMID ?? '',
+            registryNo: searchRegistryNo ?? '',
+            eduAdmins: searchEduAdmins ?? '',
+            regionEduAdmins: searchRegionEduAdmins ?? '',
+            municipalities: searchMunicipalities ?? '',
+            unitTypes: searchUnitTypes ?? '',
+            orientationTypes: searchOrientationTypes ?? '',
+            operationShifts: searchOperationShifts ?? ''
         },
         zoom: zoom,
         lat: lat,
@@ -227,7 +227,7 @@ function sanitization(string) {
 
 function onUnitClick(APIEndpoint) {
     $.getJSON(APIEndpoint, function (results) {
-        if (_.isNil(results.data[0])) {
+        if (results?.data?.[0] == null) {
             //console.log('MM api connection error - Unit Info');
             return;
         }
@@ -247,23 +247,23 @@ function onUnitClick(APIEndpoint) {
 }
 
 function showUnitModal(unitData, sites) {
-    var registryNo = !_.isNil(unitData.registry_no) ? unitData.registry_no : '';
-    var eduAdmin = !_.isNil(unitData.edu_admin) ? unitData.edu_admin : '';
-    var regionEduAdmin = !_.isNil(unitData.region_edu_admin) ? unitData.region_edu_admin : '';
-    var municipality = !_.isNil(unitData.municipality) ? unitData.municipality : '';
-    var unitType = !_.isNil(unitData.unit_type) ? unitData.unit_type : '';
-    var orientationType = !_.isNil(unitData.orientation_type) ? unitData.orientation_type : '';
-    var operationShift = !_.isNil(unitData.operation_shift) ? unitData.operation_shift : '';
-    var streetAddress = !_.isNil(unitData.street_address) ? unitData.street_address : '';
-    var postalCode = !_.isNil(unitData.postal_code) ? unitData.postal_code : '';
-    var phoneNumber = !_.isNil(unitData.phone_number) ? unitData.phone_number : '';
-    var faxNumber = !_.isNil(unitData.fax_number) ? unitData.fax_number : '';
-    var email = !_.isNil(unitData.email) ? unitData.email : '';
-    var latitude = !_.isNil(unitData.latitude) ? unitData.latitude : 0;
-    var longitude = !_.isNil(unitData.longitude) ? unitData.longitude : 0;
+    var registryNo = unitData.registry_no ?? '';
+    var eduAdmin = unitData.edu_admin ?? '';
+    var regionEduAdmin = unitData.region_edu_admin ?? '';
+    var municipality = unitData.municipality ?? '';
+    var unitType = unitData.unit_type ?? '';
+    var orientationType = unitData.orientation_type ?? '';
+    var operationShift = unitData.operation_shift ?? '';
+    var streetAddress = unitData.street_address ?? '';
+    var postalCode = unitData.postal_code ?? '';
+    var phoneNumber = unitData.phone_number ?? '';
+    var faxNumber = unitData.fax_number ?? '';
+    var email = unitData.email ?? '';
+    var latitude = unitData.latitude ?? 0;
+    var longitude = unitData.longitude ?? 0;
 
     var sitesRow = '';
-    if (!_.isNil(sites)) {
+    if (sites != null) {
         sitesRow = "<tr><th>Ιστότοποι</th><td>" + (sites?.data?.sites ? sites.data.sites.map((site) => {
             return "<a class='url-break' href='https://" + site.url + "' target='_blank'>" + site.url + "</a>";
         }).join("<br />") : "-") + "</td></tr>";

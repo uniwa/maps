@@ -37,7 +37,7 @@ $(document).ready(function() {
             });
         }
         var value = urlParams.searchValues[filter.urlKey];
-        if (!_.isEmpty(value)) {
+        if (value && value.length) {
             $(filter.selector).val(value).trigger('change');
         }
     });
@@ -91,7 +91,7 @@ function loadUnits(query, renderList) {
     var url = MapsConfig.baseMMUrl + 'units.geojson?state=1' + (query ? '&' + query : '');
 
     $.getJSON(url, function (results) {
-        if (_.isNil(results.data)) {
+        if (results?.data == null) {
             console.log('MM api connection error - ' + url);
             hideSpinner();
             return;
