@@ -58,16 +58,11 @@
             <img src="assets/img/brand-mark.png" alt="Χάρτης Μονάδων ΠΣΔ"
                  width="59" height="45">
           </a>
-          <!-- Centred rather than tucked under the mark: it is the reason to
-               open the sidebar, and the middle of a tall strip is where a thumb
-               lands. The wordmark below it gives the empty half something to
-               say -- it repeats the mark's own words, so screen readers skip
-               it. -->
+          <!-- No search icon here: a click anywhere on the rail opens the
+               sidebar, so an icon whose only job was that had nothing left to
+               do. What fills the strip is the name, repeating the mark's own
+               words -- so screen readers skip it. -->
           <div class="rail-mid">
-            <button type="button" class="rail-btn" id="rail-search" title="Αναζήτηση">
-              <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
-              <span class="sr-only">Αναζήτηση</span>
-            </button>
             <span class="rail-wordmark" aria-hidden="true">Χάρτης Μονάδων ΠΣΔ</span>
           </div>
           <button type="button" class="rail-btn rail-btn-foot" id="rail-menu"

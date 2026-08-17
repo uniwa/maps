@@ -381,12 +381,6 @@ document.addEventListener('DOMContentLoaded', function () {
         expandPanel();
     });
 
-    /* The rail carries search and the footer material, nothing else: opening
-       straight into the filters was a confusing place to arrive. */
-    document.getElementById('rail-search').addEventListener('click', function () {
-        expandPanel();
-        document.getElementById('search_name').focus();
-    });
     /* The footer carries these, so opening the sidebar is what reveals them */
     document.getElementById('rail-menu').addEventListener('click', expandPanel);
 
@@ -511,16 +505,16 @@ function applyFilters() {
 }
 
 /**
- * Flags the rail's search icon when results have arrived while the sidebar is
+ * Flags the collapse tab when results have arrived while the sidebar is
  * narrowed, so something changed silently rather than being thrown in the way.
  * Cleared as soon as the sidebar is opened.
  */
 function markRailNews() {
     var container = document.getElementById('container');
-    var button = document.getElementById('rail-search');
-    if (!container || !button) return;
+    var tab = document.getElementById('panel-collapse');
+    if (!container || !tab) return;
     if (container.classList.contains('panel-collapsed')) {
-        button.classList.add('has-news');
+        tab.classList.add('has-news');
     }
 }
 

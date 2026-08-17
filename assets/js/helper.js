@@ -136,8 +136,7 @@ function setPanelCollapsed(collapsed)
         closeUnitPanel();
     } else {
         /* Opening the sidebar is seeing whatever the dot was about */
-        var news = document.getElementById('rail-search');
-        if (news) news.classList.remove('has-news');
+        if (toggle) toggle.classList.remove('has-news');
     }
     if (toggle) {
         toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
