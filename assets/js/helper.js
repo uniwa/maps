@@ -1,57 +1,25 @@
 //---------------------Spinner functions---------------------
-// Function to display the spinner
+/* A CSS overlay, styled in app.css. Replaces spin.js, which drew the same
+   thing with a canvas and 60 lines of inline styles. */
 function showSpinner() {
-    // Initialize
-    if ($('.kintone-spinner').length == 0) {
-        // Create elements for the spinner and the background of the spinner
-        var spin_div = $('<div id ="kintone-spin" class="kintone-spinner"></div>');
-        var spin_bg_div = $('<div id ="kintone-spin-bg" class="kintone-spinner"></div>');
-
-        // Append spinner to the body
-        $(document.body).append(spin_div, spin_bg_div);
-
-        // Set a style for the spinner
-        $(spin_div).css({
-            'position': 'fixed',
-            'top': '50%',
-            'left': '50%',
-            'z-index': '510',
-            'background-color': '#fff',
-            'padding': '26px',
-            '-moz-border-radius': '4px',
-            '-webkit-border-radius': '4px',
-            'border-radius': '4px'
-        });
-        $(spin_bg_div).css({
-            'position': 'absolute',
-            'top': '0px',
-            'left': '0px',
-            'z-index': '500',
-            'width': '100%',
-            'height': '200%',
-            'background-color': '#000',
-            'opacity': '0.5',
-            'filter': 'alpha(opacity=50)',
-            '-ms-filter': "alpha(opacity=50)"
-        });
-
-        // Set options for the spinner
-        var opts = {
-            'color': '#000'
-        };
-
-        // Create the spinner
-        new Spinner(opts).spin(document.getElementById('kintone-spin'));
+    var overlay = document.getElementById('spinner');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'spinner';
+        overlay.className = 'spinner-overlay';
+        overlay.setAttribute('role', 'status');
+        overlay.setAttribute('aria-label', 'Φόρτωση');
+        overlay.innerHTML = '<div class="spinner-dial"></div>';
+        document.body.appendChild(overlay);
     }
-
-    // Display the spinner
-    $('.kintone-spinner').show();
+    overlay.hidden = false;
 }
 
-// Function to hide the spinner
 function hideSpinner() {
-    // Hide the spinner
-    $('.kintone-spinner').hide();
+    var overlay = document.getElementById('spinner');
+    if (overlay) {
+        overlay.hidden = true;
+    }
 }
 
 //---------------------Get url functions---------------------
