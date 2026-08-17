@@ -41,62 +41,29 @@
 
     <a class="skip-link" href="#feature-list">Μετάβαση στα αποτελέσματα</a>
 
-    <header class="site-header">
-      <a class="site-brand" href="main.html">
-        <img src="assets/img/Map-Banner-main.jpg" alt="Χάρτης Μονάδων ΠΣΔ" width="220" height="40">
-      </a>
-
-      <button type="button" class="header-btn header-btn-mobile" id="sidebar-toggle-btn"
-              aria-controls="sidebar" aria-expanded="false">
-        <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
-        <span class="sr-only">Αναζήτηση</span>
-      </button>
-
-      <button type="button" class="header-btn header-btn-mobile" id="nav-btn"
-              aria-controls="site-nav" aria-expanded="false">
-        <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
-        <span class="sr-only">Μενού</span>
-      </button>
-
-      <nav class="site-nav" id="site-nav" aria-label="Κύριο μενού">
-        <button type="button" class="nav-item nav-item-desktop" id="list-btn">
-          <svg class="icon" aria-hidden="true"><use href="#i-list"></use></svg>Αναζήτηση
-        </button>
-
-        <details class="nav-item nav-details" id="downloadDrop">
-          <summary>
-            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Αρχεία
-          </summary>
-          <div class="nav-details-menu">
-            <a href="documents/user_guide_maps.pdf" download target="_blank" rel="noopener">
-              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Εγχειρίδιο Χρήστη Χάρτη Μονάδων ΠΣΔ
-            </a>
-            <a href="documents/term_of_use_maps.pdf" download target="_blank" rel="noopener">
-              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Όροι Χρήσης Υπηρεσίας
-            </a>
-          </div>
-        </details>
-
-        <button type="button" class="nav-item" id="about-btn">
-          <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>Πληροφορίες
-        </button>
-        <button type="button" class="nav-item" id="legend-btn">
-          <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>Επικοινωνία
-        </button>
-      </nav>
-    </header>
-
     <div id="container">
-      <aside id="sidebar" data-testid="sidebar" aria-label="Αναζήτηση μονάδων">
-        <div class="sidebar-header">
-          <h2>Φίλτρα Αναζήτησης</h2>
-          <button type="button" class="icon-btn" id="sidebar-hide-btn">
-            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
-            <span class="sr-only">Απόκρυψη φίλτρων</span>
-          </button>
+      <div id="map" data-testid="map"></div>
+
+      <!-- One floating panel: the search box, and below it the filters and
+           results. No header bar, so the map gets the whole viewport and there
+           is a single place to look for controls. -->
+      <div id="panel" class="panel" data-testid="panel" aria-label="Αναζήτηση μονάδων">
+        <!-- The banner is shown at its native 260x45. The old header scaled it
+             to 220x40, which blurred the Greek lettering. When the panel is
+             collapsed it gives way to the square mark cropped from its icon. -->
+        <div class="panel-brand">
+          <a href="index.php" title="Χάρτης Μονάδων ΠΣΔ">
+            <img src="assets/img/Map-Banner-main.jpg" alt="Χάρτης Μονάδων ΠΣΔ"
+                 width="260" height="45">
+          </a>
         </div>
 
-        <form class="sidebar-filters" id="filters" novalidate>
+        <div class="panel-bar">
+          <a class="panel-brand-mark" href="index.php" title="Χάρτης Μονάδων ΠΣΔ">
+            <img src="assets/img/brand-mark.png" alt="Χάρτης Μονάδων ΠΣΔ"
+                 width="45" height="45">
+          </a>
+
           <div class="search-box">
             <label class="sr-only" for="search_name">Όνομα Μονάδας</label>
             <div class="search-input">
@@ -109,6 +76,36 @@
             <ul class="suggestions" id="search-suggestions" data-testid="suggestions"
                 role="listbox" aria-label="Προτάσεις αναζήτησης" hidden></ul>
           </div>
+
+          <button type="button" class="panel-collapse" id="panel-collapse"
+                  aria-controls="filters" aria-expanded="true" data-testid="panel-collapse">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+            <span class="sr-only">Απόκρυψη αποτελεσμάτων</span>
+          </button>
+
+          <details class="panel-menu" id="panel-menu">
+            <summary title="Μενού" data-testid="menu-toggle">
+              <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+              <span class="sr-only">Μενού</span>
+            </summary>
+            <div class="panel-menu-list">
+              <button type="button" id="about-btn">
+                <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>Πληροφορίες
+              </button>
+              <button type="button" id="legend-btn">
+                <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>Επικοινωνία
+              </button>
+              <a href="documents/user_guide_maps.pdf" download target="_blank" rel="noopener">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Εγχειρίδιο Χρήστη
+              </a>
+              <a href="documents/term_of_use_maps.pdf" download target="_blank" rel="noopener">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Όροι Χρήσης
+              </a>
+            </div>
+          </details>
+        </div>
+
+        <form class="panel-body" id="filters" novalidate>
 
           <details class="advanced-filters" id="advanced-filters">
             <summary data-testid="filters-toggle">Περισσότερα φίλτρα</summary>
@@ -155,19 +152,16 @@
             </button>
             <button type="reset" class="btn" id="reset">Καθαρισμός</button>
           </div>
+
+          <div class="sidebar-results">
+            <div id="units_info" aria-live="polite"></div>
+            <table id="feature-list" data-testid="feature-list">
+              <caption class="sr-only">Αποτελέσματα αναζήτησης μονάδων</caption>
+              <tbody class="list"></tbody>
+            </table>
+          </div>
         </form>
-
-        <div class="sidebar-results">
-          <div id="units_info" aria-live="polite"></div>
-          <table id="feature-list" data-testid="feature-list">
-            <caption class="sr-only">Αποτελέσματα αναζήτησης μονάδων</caption>
-            <tbody class="list"></tbody>
-          </table>
-        </div>
-
-      </aside>
-
-      <div id="map" data-testid="map"></div>
+      </div>
 
       <!-- Unit details. A panel rather than a modal, so the map stays visible
            and the selected pin keeps its context: a side card on a wide screen,

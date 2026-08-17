@@ -70,30 +70,24 @@ function getUrlParams()
 
 //---------------------General functions---------------------
 /**
- * On a narrow screen the sidebar slides over the map; on a wide one the grid
- * collapses its column. One class each, instead of jQuery's animate().
+ * Collapses the panel down to its search bar, and back.
+ *
+ * The control lives in the bar, which never hides, so the panel can always be
+ * brought back. The previous collapse button sat inside the part that got
+ * hidden, leaving no visible way to reopen it.
  */
-function animateSidebar()
+function togglePanel()
 {
-    var sidebar = document.getElementById('sidebar');
-    var container = document.getElementById('container');
-    var toggle = document.getElementById('sidebar-toggle-btn');
-    if (!sidebar || !container) return;
+    var panel = document.getElementById('panel');
+    var toggle = document.getElementById('panel-collapse');
+    if (!panel) return;
 
-    var open;
-    if (window.matchMedia('(min-width: 900px)').matches) {
-        container.classList.toggle('sidebar-hidden');
-        open = !container.classList.contains('sidebar-hidden');
-    } else {
-        sidebar.classList.toggle('is-open');
-        open = sidebar.classList.contains('is-open');
-    }
-
+    var collapsed = panel.classList.toggle('is-collapsed');
     if (toggle) {
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    }
-    if (typeof map !== 'undefined' && map) {
-        map.invalidateSize();
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        toggle.querySelector('.sr-only').textContent = collapsed
+            ? 'Εμφάνιση αποτελεσμάτων'
+            : 'Απόκρυψη αποτελεσμάτων';
     }
 }
 
@@ -230,13 +224,12 @@ function showUnitModal(unitData, sites) {
     );
     keepUnitInView();
 
-    /* On a narrow screen the details take over, so fold the filters away */
-    var sidebar = document.getElementById('sidebar');
-    if (sidebar && !window.matchMedia('(min-width: 900px)').matches) {
-        sidebar.classList.remove('is-open');
-        var toggle = document.getElementById('sidebar-toggle-btn');
-        if (toggle) toggle.setAttribute('aria-expanded', 'false');
-        map.invalidateSize();
+    /* On a narrow screen the details sheet takes over the lower half, so fold
+       the search panel down to its bar and leave the map legible. */
+    var panel = document.getElementById('panel');
+    if (panel && !window.matchMedia('(min-width: 900px)').matches &&
+        !panel.classList.contains('is-collapsed')) {
+        togglePanel();
     }
 }
 

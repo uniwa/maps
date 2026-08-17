@@ -224,8 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initFilters();
 
-    var container = document.getElementById('container');
-    var sidebar = document.getElementById('sidebar');
     var body = document.querySelector('#feature-list tbody');
 
     /* Result rows are added and removed constantly, so listen on the table */
@@ -257,24 +255,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.getElementById('sidebar-hide-btn').addEventListener('click', animateSidebar);
-    document.getElementById('sidebar-toggle-btn').addEventListener('click', animateSidebar);
-    document.getElementById('list-btn').addEventListener('click', animateSidebar);
+    document.getElementById('panel-collapse').addEventListener('click', togglePanel);
 
-    var navToggle = document.getElementById('nav-btn');
-    var nav = document.getElementById('site-nav');
-    navToggle.addEventListener('click', function () {
-        var open = nav.classList.toggle('is-open');
-        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-
+    /* The menu is a <details>; close it once it has done its job */
+    var menu = document.getElementById('panel-menu');
     document.getElementById('about-btn').addEventListener('click', function () {
-        nav.classList.remove('is-open');
+        menu.open = false;
         openModal('aboutModal');
     });
     document.getElementById('legend-btn').addEventListener('click', function () {
-        nav.classList.remove('is-open');
+        menu.open = false;
         openModal('legendModal');
+    });
+    menu.addEventListener('click', function (event) {
+        if (event.target.closest('a')) menu.open = false;
+    });
+    document.addEventListener('click', function (event) {
+        if (menu.open && !menu.contains(event.target)) menu.open = false;
     });
 
     document.getElementById('unit-panel-close').addEventListener('click', closeUnitPanel);
@@ -315,15 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetUnitsLayer();
         map.setView([urlParams.lat, urlParams.lng], urlParams.zoom);
         loadUnits(initialQuery, true);
-        /* A shared link arrives with filters, so show the results rather than
-           making the visitor find the search button. */
-        if (!window.matchMedia('(min-width: 900px)').matches) {
-            sidebar.classList.add('is-open');
-            document.getElementById('sidebar-toggle-btn').setAttribute('aria-expanded', 'true');
-        }
     }
-
-    void container;
 });
 
 /* The embedded map has no sidebar, so it renders no result list. It does have

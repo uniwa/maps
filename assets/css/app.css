@@ -14,8 +14,7 @@
     --line: #d6dbe0;
     --bg: #fff;
     --bg-soft: #f4f6f8;
-    --header-h: 52px;
-    --sidebar-w: 340px;
+    --panel-w: 360px;
     --focus: #0b6ba8;
 }
 
@@ -79,142 +78,139 @@ a { color: var(--brand); }
     outline-offset: 2px;
 }
 
-/* ---------------------------------------------------------------- header */
-
-.site-header {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: var(--header-h);
-    padding: 0 10px;
-    background: #222;
-    color: #fff;
-}
-
-.site-brand { display: flex; align-items: center; }
-.site-brand img { display: block; height: 34px; width: auto; }
-
-.header-btn,
-.nav-item,
-.nav-details > summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: #fff;
-    font: inherit;
-    line-height: 1;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.header-btn:hover,
-.nav-item:hover,
-.nav-details > summary:hover { background: rgba(255, 255, 255, 0.14); }
-
-.header-btn-mobile { margin-left: auto; }
-.header-btn-mobile + .header-btn-mobile { margin-left: 0; }
-
-.site-nav {
-    display: none;
-    position: absolute;
-    top: var(--header-h);
-    left: 0;
-    right: 0;
-    z-index: 900;
-    flex-direction: column;
-    padding: 6px;
-    background: #222;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
-}
-
-.site-nav.is-open { display: flex; }
-
-.nav-item-desktop { display: none; }
-
-/* details/summary gives a dropdown with no JavaScript at all */
-.nav-details { position: relative; }
-.nav-details > summary { list-style: none; }
-.nav-details > summary::-webkit-details-marker { display: none; }
-.nav-details > summary::after {
-    content: "";
-    border: 4px solid transparent;
-    border-top-color: currentColor;
-    margin-top: 4px;
-}
-
-.nav-details-menu {
-    display: flex;
-    flex-direction: column;
-    padding: 4px 0 4px 22px;
-}
-
-.nav-details-menu a {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 6px;
-    color: #fff;
-    text-decoration: none;
-    font-size: 14px;
-}
-.nav-details-menu a:hover { text-decoration: underline; }
-
-/* ------------------------------------------------------------- container */
+/* ----------------------------------------------------------- map + panel */
 
 #container {
     flex: 1;
     position: relative;
-    display: grid;
-    grid-template-columns: 1fr;
     min-height: 0;
 }
 
 #map {
-    height: 100%;
-    min-height: 0;
+    position: absolute;
+    inset: 0;
     background: var(--bg-soft);
 }
 
-/* --------------------------------------------------------------- sidebar */
-
-#sidebar {
+/**
+ * One floating card over the map, holding the search box and, below it, the
+ * filters and results. There is no header bar: the map gets the whole viewport
+ * and there is a single place to look for controls.
+ */
+.panel {
     position: absolute;
-    inset: 0;
-    /* Above Leaflet's controls (1000), which otherwise float over the sidebar
-       when it covers the map on a phone. */
     z-index: 1100;
+    top: 12px;
+    left: 12px;
+    width: var(--panel-w);
+    max-height: calc(100% - 24px);
     display: flex;
     flex-direction: column;
     background: var(--bg);
-    border-right: 1px solid var(--line);
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 8px 28px rgba(0, 0, 0, 0.18);
     overflow: hidden;
 }
 
-#sidebar.is-open { transform: translateX(0); }
-
-.sidebar-header {
+.panel-bar {
     flex: none;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--bg-soft);
-    border-bottom: 1px solid var(--line);
+    gap: 6px;
+    padding: 8px;
 }
 
-.sidebar-header h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
+/* Both marks are used at their native size; scaling the banner down was what
+   made it look muddy. */
+.panel-brand {
+    flex: none;
+    padding: 10px 12px 0;
 }
+.panel-brand a { display: inline-block; line-height: 0; }
+.panel-brand img { display: block; max-width: 100%; height: auto; }
+
+.panel.is-collapsed .panel-brand { display: none; }
+
+.panel-brand-mark { display: none; flex: none; line-height: 0; }
+.panel-brand-mark img { display: block; border-radius: 6px; }
+.panel.is-collapsed .panel-brand-mark { display: block; }
+
+.panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.panel.is-collapsed .panel-body { display: none; }
+
+/* Menu, as a <details> so it needs no JavaScript to open */
+.panel-menu { flex: none; position: relative; }
+
+.panel-menu > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    list-style: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+.panel-menu > summary::-webkit-details-marker { display: none; }
+.panel-menu > summary:hover { background: var(--bg-soft); }
+
+.panel-menu-list {
+    position: absolute;
+    z-index: 1250;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
+}
+
+.panel-menu-list > button,
+.panel-menu-list > a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.panel-menu-list > button:hover,
+.panel-menu-list > a:hover { background: var(--bg-soft); }
+
+.panel-collapse {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+.panel-collapse:hover { background: var(--bg-soft); }
+.panel-collapse .icon { transition: transform 0.15s; transform: rotate(90deg); }
+.panel.is-collapsed .panel-collapse .icon { transform: rotate(-90deg); }
 
 .icon-btn {
     display: inline-flex;
@@ -229,31 +225,6 @@ a { color: var(--brand); }
     cursor: pointer;
 }
 .icon-btn:hover { background: var(--bg-soft); }
-
-.sidebar-filters {
-    /* Capped so the results list always keeps roughly half the sidebar. With
-       nine filters this block is taller than most viewports, and without the
-       cap the results were pushed out of view entirely. */
-    /* Must not shrink below its content, or the fields collapse to a sliver
-       and only the first one is visible. The fields scroll inside; the search
-       button stays pinned so it is always reachable. */
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    max-height: 58%;
-    /* visible, so the search suggestions are not clipped by this block */
-    overflow: visible;
-    min-height: 0;
-    padding: 0;
-    margin: 0;
-}
-
-.filter-fields {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 10px 12px 0;
-}
 
 .field { margin: 0 0 10px; }
 
@@ -280,7 +251,7 @@ a { color: var(--brand); }
     flex: none;
     display: flex;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 8px 10px;
     background: var(--bg);
     border-top: 1px solid var(--line);
 }
@@ -349,7 +320,6 @@ a { color: var(--brand); }
     font-weight: normal;
     text-align: center;
 }
-
 
 /* --------------------------------------------------------------- dialogs */
 
@@ -446,50 +416,19 @@ a { color: var(--brand); }
 }
 .url-break { overflow-wrap: anywhere; }
 
-/* --------------------------------------------------------------- desktop */
+/* ---------------------------------------------------------------- phone */
 
-@media (min-width: 900px) {
-    .site-nav {
-        display: flex;
-        position: static;
-        flex-direction: row;
-        align-items: center;
-        gap: 2px;
-        margin-left: auto;
-        padding: 0;
-        background: none;
-        box-shadow: none;
+@media (max-width: 899px) {
+    /* Full width, hugging the edges, and the results get more room because
+       there is no other chrome competing for it. */
+    .panel {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-height: calc(100% - 16px);
     }
 
-    .nav-item-desktop { display: inline-flex; }
-    .header-btn-mobile { display: none; }
-
-    .nav-details-menu {
-        position: absolute;
-        right: 0;
-        top: 100%;
-        z-index: 950;
-        min-width: 320px;
-        padding: 6px;
-        background: #222;
-        border-radius: 0 0 6px 6px;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    #container { grid-template-columns: var(--sidebar-w) 1fr; }
-
-    #sidebar {
-        position: static;
-        transform: none;
-        transition: none;
-    }
-
-    /* Collapsed by the chevron or the "Αναζήτηση" menu item */
-    #container.sidebar-hidden { grid-template-columns: 0 1fr; }
-    #container.sidebar-hidden #sidebar {
-        border-right: 0;
-        visibility: hidden;
-    }
 }
 
 /* --------------------------------------------------------------- spinner */
@@ -530,7 +469,6 @@ a { color: var(--brand); }
 
 @media (prefers-reduced-motion: reduce) {
     .spinner-dial { animation-duration: 2.4s; }
-    #sidebar { transition: none; }
 }
 
 /* ------------------------------------------------- share popup (Leaflet) */
@@ -742,13 +680,21 @@ a { color: var(--brand); }
 /* -------------------------------------------------- advanced filters block */
 
 .advanced-filters {
-    /* Clips its own scrolling field list. The dropdown panels inside are
+    /* Takes what it needs up to a cap, and never shrinks below its content:
+       with flex-shrink allowed, the results list squeezed it down to a sliver
+       and only the first field was visible.
+
+       Clips its own scrolling field list. The dropdown panels inside are
        position:fixed, so clipping here does not affect them; only the search
        suggestions need to escape, and they are a sibling of this block. */
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    /* vh, not a percentage: a percentage max-height resolves against an
+       auto-height flex parent as none, so the block took the whole panel and
+       pushed the results out of sight. */
+    max-height: 40vh;
     overflow: hidden;
 }
 
@@ -822,18 +768,19 @@ a { color: var(--brand); }
 }
 
 @media (min-width: 900px) {
-    /* A card in the sidebar column, so the map keeps its full width */
+    /* A floating card in the same place as the search panel, so details and
+       search share one location rather than competing for attention. */
     .unit-panel {
-        top: 0;
+        top: 12px;
+        left: 12px;
         right: auto;
-        bottom: 0;
-        width: var(--sidebar-w);
-        max-height: none;
-        border-top: 0;
-        border-right: 1px solid var(--line);
-        border-radius: 0;
-        box-shadow: 6px 0 20px rgba(0, 0, 0, 0.14);
-        transform: translateX(-100%);
+        bottom: auto;
+        width: var(--panel-w);
+        max-height: calc(100% - 24px);
+        border: 0;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 8px 28px rgba(0, 0, 0, 0.18);
+        transform: translateX(calc(-100% - 16px));
     }
     .unit-panel.is-open { transform: translateX(0); }
 }
