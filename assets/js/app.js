@@ -191,8 +191,8 @@ function loadUnits(query, renderList) {
 
             /* A point of reference that was waiting for these */
             if (pendingNearest) {
-                showNearest(pendingNearest.lat, pendingNearest.lng,
-                            pendingNearest.accuracy, { chosen: pendingNearest.chosen });
+                showNearest(pendingNearest.lat, pendingNearest.lng, pendingNearest.accuracy,
+                            { chosen: pendingNearest.chosen, frame: pendingNearest.frame });
             }
         })
         .catch(function (err) {
@@ -276,6 +276,10 @@ if (!MapsConfig.embed) {
  */
 function showNearest(lat, lng, accuracy, options) {
     var chosen = !!(options && options.chosen);
+    /* Whether this is also allowed to move the map. It usually is -- being shown
+       where you are is half the answer -- but not when something more specific
+       has the view, such as a unit card opened by the same link. */
+    var frame = !(options && options.frame === false);
     located = { lat: lat, lng: lng, chosen: chosen };
 
     youAreHere.clearLayers();
@@ -315,7 +319,9 @@ function showNearest(lat, lng, accuracy, options) {
        is instant, the 379 KB of units is not -- so hold the position and answer
        it once they land, rather than reporting nothing nearby. */
     if (loadedFeatures.length === 0) {
-        pendingNearest = { lat: lat, lng: lng, accuracy: accuracy, chosen: chosen };
+        pendingNearest = {
+            lat: lat, lng: lng, accuracy: accuracy, chosen: chosen, frame: frame
+        };
         info.textContent = 'Αναζήτηση κοντινών μονάδων…';
         return;
     }
@@ -343,13 +349,15 @@ function showNearest(lat, lng, accuracy, options) {
     });
     body.appendChild(fragment);
 
-    /* Frame the visitor and the nearest handful, rather than jumping to a fixed
+    /* Frame the point and the nearest handful, rather than jumping to a fixed
        zoom that might contain none of them. */
-    map.fitBounds(L.latLngBounds(
-        [[lat, lng]].concat(closest.slice(0, 5).map(function (hit) {
-            return [hit.feature.geometry.coordinates[1], hit.feature.geometry.coordinates[0]];
-        }))
-    ), { padding: [60, 60], maxZoom: 15 });
+    if (frame) {
+        map.fitBounds(L.latLngBounds(
+            [[lat, lng]].concat(closest.slice(0, 5).map(function (hit) {
+                return [hit.feature.geometry.coordinates[1], hit.feature.geometry.coordinates[0]];
+            }))
+        ), { padding: [60, 60], maxZoom: 15 });
+    }
 }
 
 //-----------------------------Wire up the interface----------------------------
@@ -481,10 +489,14 @@ document.addEventListener('DOMContentLoaded', function () {
        very thing the link was shared for. */
     setPanelCollapsed(initialQuery === '' && sharedUnit === '' && !sharedPoint);
 
-    /* Answered once the units land, which is what pendingNearest is for */
+    /* Answered once the units land, which is what pendingNearest is for.
+       If the same link also opens a unit, that card gets the view: the two
+       arrive at different times -- one small request, one of 379 KB -- so
+       without this the map settled on whichever finished last. */
     if (sharedPoint) {
         pendingNearest = {
-            lat: sharedPoint.lat, lng: sharedPoint.lng, accuracy: null, chosen: true
+            lat: sharedPoint.lat, lng: sharedPoint.lng, accuracy: null,
+            chosen: true, frame: sharedUnit === ''
         };
     }
 
