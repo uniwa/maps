@@ -607,7 +607,10 @@ a { color: var(--brand); }
 
 .search-box {
     position: relative;
-    flex: none;
+    /* Grows to fill the bar. As flex:none it sized to its content and left a
+       gap on the right once the menu button was taken out of the pill. */
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 10px 12px;
     border-bottom: 1px solid var(--line);
 }
