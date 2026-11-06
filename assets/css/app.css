@@ -925,6 +925,14 @@ a { color: var(--brand); }
 /* ------------------------------------------------------------- proximity */
 
 /* Leaflet's own control chrome, so they sit with the zoom buttons */
+/* Leaflet's touch size would reach over the open panel on a phone */
+.leaflet-control-layers-toggle,
+.leaflet-touch .leaflet-control-layers-toggle {
+    width: 30px;
+    height: 30px;
+    background-size: 20px;
+}
+
 .locate-control button,
 .point-control button {
     display: block;
