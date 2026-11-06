@@ -7,6 +7,9 @@
  * To override, define window.MapsConfigOverride before this file is loaded:
  *
  *   <script>window.MapsConfigOverride = { baseMMUrl: 'https://mm.example/api/' };</script>
+ *
+ * main.html does this through config.local.js, which is empty here and can be
+ * replaced on an instance without touching any other file.
  */
 var MapsConfig = (function () {
     var origin = window.location.origin ||
@@ -36,12 +39,17 @@ var MapsConfig = (function () {
         lngGR : '24.2',
         zoomGR : '7',
 
-        /* Basemap */
+        /* Basemap: the first of baseLayers below, and the only one in the embed */
         tileUrl : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=el',
         tileMaxZoom : 19,
         tileAttribution : attributionOSM,
         /* The embedded map carries a link back to us, since it is shown on other sites */
         embedAttribution : '<a href="' + baseUrl + '" target="_blank">Χάρτης Μονάδων ΠΣΔ</a><br>' + attributionOSM,
+
+        /* Further basemaps for this instance, appended to the switcher's list.
+           Each is { name, url, options }. Anything that needs an API key belongs
+           here, set from config.local.js, and never in this file. */
+        extraBaseLayers : [],
 
         /* Set by embed.html. Disables the sidebar, filters and share controls. */
         embed : false,
@@ -62,6 +70,20 @@ var MapsConfig = (function () {
     if (config.embed && !overrides.tileAttribution) {
         config.tileAttribution = config.embedAttribution;
     }
+
+    /* Built after the overrides, so it reflects them. The first is the default. */
+    config.baseLayers = [{
+        name : 'OpenStreetMap',
+        url : config.tileUrl,
+        options : { maxZoom: config.tileMaxZoom, lang: 'el', attribution: config.tileAttribution }
+    }, {
+        name : 'Voyager',
+        url : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        options : {
+            maxZoom: config.tileMaxZoom,
+            attribution: attributionOSM + ', &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
+        }
+    }].concat(config.extraBaseLayers);
 
     return config;
 })();

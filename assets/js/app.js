@@ -203,11 +203,11 @@ function loadUnits(query, renderList) {
 
 //----------------------Initial variables for map--------------------------------------------------------
 /* Basemap Layers */
-var baseMap = L.tileLayer(MapsConfig.tileUrl, {
-    maxZoom: MapsConfig.tileMaxZoom,
-    lang: 'el',
-    attribution: MapsConfig.tileAttribution
+var baseLayers = {};
+MapsConfig.baseLayers.forEach(function (layer) {
+    baseLayers[layer.name] = L.tileLayer(layer.url, layer.options);
 });
+var baseMap = baseLayers[MapsConfig.baseLayers[0].name];
 /* Overlay Layers */
 var highlight = L.geoJson(null);
 var highlightStyle = {
@@ -240,10 +240,20 @@ var attributionControl = L.control({ position: "bottomright" });
 attributionControl.onAdd = function () {
     var div = L.DomUtil.create("div", "leaflet-control-attribution");
     div.innerHTML = baseMap.getAttribution();
+    map.on('baselayerchange', function (event) {
+        div.innerHTML = event.layer.getAttribution();
+    });
     return div;
 };
 map.addControl(attributionControl);
 L.control.zoom({ position: "bottomright" }).addTo(map);
+
+if (!MapsConfig.embed) {
+    var layersControl = L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+    var layersContainer = layersControl.getContainer();
+    layersContainer.setAttribute('data-testid', 'layers-control');
+    layersContainer.querySelector('.leaflet-control-layers-toggle').title = 'Υπόβαθρο χάρτη';
+}
 
 /* Where am I, and what is near me: the half of the navigation work that needs
    no routing provider. */
